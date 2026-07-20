@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#FF6B6B">
+<title>🐾 双狗管家</title>
+<style>
+:root{--bg:#FFF8F0;--card:#fff;--pri:#FF6B6B;--pri-l:#FF8E8E;--pri-d:#E55A5A;--sec:#4ECDC4;--txt:#2D3436;--txt-l:#636E72;--txt-m:#B2BEC3;--bdr:#F0E6DE;--shd:0 2px 12px rgba(0,0,0,.08);--dng:#E74C3C;--wrn:#F39C12;--suc:#27AE60;--rad:16px;--rad-s:10px;--tab-h:64px}
+@media(prefers-color-scheme:dark){:root{--bg:#1A1A2E;--card:#222244;--txt:#EAEAEA;--txt-l:#B0B0C0;--txt-m:#666680;--bdr:#333355;--shd:0 2px 12px rgba(0,0,0,.3)}}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,'PingFang SC','Hiragino Sans GB',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden;padding-bottom:80px}
+.hdr{background:linear-gradient(135deg,var(--pri),var(--pri-l));color:#fff;padding:14px 20px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(255,107,107,.3)}
+.hdr h1{font-size:20px}.hdr small{font-size:12px;opacity:.85}
+.tab-bar{position:fixed;bottom:0;left:0;right:0;height:var(--tab-h);background:var(--card);display:flex;justify-content:space-around;align-items:center;border-top:1px solid var(--bdr);z-index:200;box-shadow:0 -2px 10px rgba(0,0,0,.05);padding-bottom:env(safe-area-inset-bottom,0)}
+.tab-i{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:6px 12px;border-radius:var(--rad-s);transition:.2s;user-select:none}
+.tab-i:active{transform:scale(.92)}.tab-i .ic{font-size:22px}.tab-i .lb{font-size:10px;color:var(--txt-m);font-weight:500}
+.tab-i.active .lb{color:var(--pri);font-weight:700}.tab-i.active{background:rgba(255,107,107,.08)}
+.page{display:none;padding:16px;max-width:500px;margin:0 auto;animation:fi .3s}.page.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--card);border-radius:var(--rad);padding:16px;margin-bottom:14px;box-shadow:var(--shd);border:1px solid var(--bdr);transition:.15s}
+.card:active{transform:scale(.985)}
+.ct{font-size:16px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border:none;border-radius:var(--rad-s);font-size:14px;font-weight:600;cursor:pointer;transition:.15s;user-select:none;font-family:inherit;color:var(--txt)}
+.btn:active{transform:scale(.95)}.btn-p{background:var(--pri);color:#fff}.btn-s2{background:var(--sec);color:#fff}
+.btn-o{background:transparent;color:var(--pri);border:1.5px solid var(--pri)}.btn-sm{padding:6px 12px;font-size:12px}
+.btn-d{background:var(--dng);color:#fff}.btn-blk{width:100%}
+.fg{margin-bottom:12px}.fl{display:block;font-size:13px;font-weight:600;margin-bottom:4px;color:var(--txt-l)}
+.fi,.fsel,.fta{width:100%;padding:10px 14px;border:1.5px solid var(--bdr);border-radius:var(--rad-s);font-size:14px;background:var(--card);color:var(--txt);font-family:inherit;transition:border-color .2s;-webkit-appearance:none}
+.fi:focus,.fsel:focus,.fta:focus{outline:none;border-color:var(--pri)}.fta{resize:vertical;min-height:60px}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.b-safe{background:#E8F5E9;color:var(--suc)}.b-warn{background:#FFF3E0;color:var(--wrn)}.b-toxic{background:#FFEBEE;color:var(--dng)}
+.b-pri{background:rgba(255,107,107,.12);color:var(--pri)}.b-sec{background:rgba(78,205,196,.12);color:var(--sec)}
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:flex-end;justify-content:center;animation:fo .2s}
+@keyframes fo{from{opacity:0}to{opacity:1}}
+.modal-c{background:var(--card);border-radius:var(--rad) var(--rad) 0 0;padding:20px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;animation:su .3s ease}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.modal-h h3{font-size:18px}
+.modal-x{width:32px;height:32px;border:none;background:var(--bdr);border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--txt-l)}
+.tg{display:flex;gap:6px;flex-wrap:wrap}
+.tb{padding:6px 14px;border:1.5px solid var(--bdr);border-radius:20px;background:transparent;font-size:13px;cursor:pointer;color:var(--txt-l);transition:.15s;font-family:inherit}
+.tb.active{background:var(--pri);color:#fff;border-color:var(--pri)}.tb:active{transform:scale(.95)}
+.dog-card{background:linear-gradient(135deg,var(--card),rgba(255,107,107,.04));border-radius:var(--rad);padding:16px;margin-bottom:14px;box-shadow:var(--shd);border:1px solid var(--bdr)}
+.dog-hdr{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.dog-av{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--pri-l),var(--sec));display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;overflow:hidden;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.dog-av img{width:100%;height:100%;object-fit:cover}
+.dog-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.stat-i{text-align:center;padding:8px 4px;background:rgba(255,107,107,.05);border-radius:var(--rad-s)}
+.stat-v{font-size:18px;font-weight:700;color:var(--pri)}.stat-l{font-size:10px;color:var(--txt-m);margin-top:2px}
+.weather-w{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:var(--rad);padding:14px 16px;color:#fff;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.weather-t{font-size:28px;font-weight:700}.weather-d{font-size:12px;opacity:.85}
+.weather-alert{background:var(--wrn);color:#fff;padding:8px 12px;border-radius:var(--rad-s);font-size:12px;font-weight:600;margin-bottom:14px;text-align:center}
+.timer-d{font-size:48px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;color:var(--pri);margin:16px 0}
+.timer-c{display:flex;gap:10px;justify-content:center}
+.food-i{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--rad-s);margin-bottom:8px;background:var(--card);border:1px solid var(--bdr);cursor:pointer;transition:.15s}
+.food-i:active{transform:scale(.98)}.food-ic{font-size:28px;flex-shrink:0}.food-inf{flex:1}
+.food-n{font-weight:600;font-size:14px}.food-nt{font-size:11px;color:var(--txt-l);margin-top:2px}.food-fav{font-size:20px;cursor:pointer;background:none;border:none}
+.search-box{position:relative;margin-bottom:14px}
+.search-box input{width:100%;padding:12px 16px 12px 40px;border:1.5px solid var(--bdr);border-radius:24px;font-size:14px;background:var(--card);color:var(--txt);font-family:inherit}
+.search-box input:focus{outline:none;border-color:var(--pri)}.search-box::before{content:'🔍';position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px}
+.cat-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;-webkit-overflow-scrolling:touch}.cat-tabs::-webkit-scrollbar{display:none}
+.hl-urgent{border-left:3px solid var(--dng)!important;background:rgba(231,76,60,.04)!important}
+.empty-s{text-align:center;padding:40px 20px;color:var(--txt-m)}.empty-s p{font-size:14px}
+.walk-i{padding:12px;border-radius:var(--rad-s);background:rgba(78,205,196,.06);margin-bottom:8px;border:1px solid var(--bdr)}
+.stats-g{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stats-c{background:var(--card);border-radius:var(--rad-s);padding:12px;text-align:center;border:1px solid var(--bdr)}
+.duty-c{background:linear-gradient(135deg,rgba(78,205,196,.1),rgba(255,107,107,.05));border:1.5px solid var(--sec);border-radius:var(--rad);padding:16px;text-align:center;margin-bottom:14px}
+.duty-p{font-size:24px;font-weight:700;color:var(--sec)}
+.pt{display:flex;gap:8px;margin-bottom:14px}
+.pt-i{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:var(--rad-s);border:1.5px solid var(--bdr);background:var(--card);cursor:pointer;font-size:14px;font-weight:600;transition:.15s;font-family:inherit;color:var(--txt)}
+.pt-i.active{border-color:var(--pri);background:rgba(255,107,107,.08);color:var(--pri)}.pt-i:active{transform:scale(.97)}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.poop-t{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.poop-n{background:#E8F5E9;color:var(--suc)}.poop-s{background:#FFF3E0;color:var(--wrn)}.poop-a{background:#FFEBEE;color:var(--dng)}
+.del-b{background:none;border:none;color:var(--txt-m);cursor:pointer;font-size:16px;padding:4px}.del-b:hover{color:var(--dng)}
+.chart-cont{position:relative;width:100%;height:160px;margin-top:8px}.chart-cont canvas{width:100%!important;height:100%!important}
+.fb{display:flex;justify-content:space-between;align-items:center}
+.mt8{margin-top:8px}.mb8{margin-bottom:8px}.mb4{margin-bottom:4px}.tsm{font-size:12px}.tmut{color:var(--txt-m)}.tc{text-align:center}
+.mini-chart{height:40px;margin-top:4px}
+.food-detail{padding:12px;background:rgba(78,205,196,.06);border-radius:var(--rad-s);margin-top:8px;font-size:13px;color:var(--txt-l)}
+</style>
+</head>
+<body>
+<div class="hdr"><h1>🐾 双狗管家</h1><small>两只毛孩子的贴心助手</small></div>
+
+<div class="page active" id="pg-dash">
+  <div id="weather-box"></div>
+  <div id="dash-dogs"></div>
+  <div class="card"><div class="ct">🐾 今日任务</div><div id="today-duty"></div><div id="today-walks"></div></div>
+  <div class="card"><div class="ct">⚠️ 提醒事项</div><div id="alert-list"></div></div>
+</div>
+
+<div class="page" id="pg-health">
+  <div class="pt" id="h-pt"></div>
+  <div class="card" id="h-profile"><div class="fb"><div class="ct">🐕 基本信息</div><button class="btn btn-sm btn-o" onclick="editDog()">编辑</button></div><div id="h-pinfo"></div></div>
+  <div class="card"><div class="sh"><div class="ct">💉 疫苗/驱虫</div><button class="btn btn-sm btn-p" onclick="showModal('vaccine')">+ 添加</button></div><div id="vacc-list"></div></div>
+  <div class="card"><div class="sh"><div class="ct">⚖️ 体重曲线</div><button class="btn btn-sm btn-p" onclick="showModal('weight')">+ 记录</button></div><div class="chart-cont"><canvas id="wt-chart"></canvas></div><div id="wt-recs" class="mt8"></div></div>
+  <div class="card"><div class="sh"><div class="ct">🏥 生病记录</div><button class="btn btn-sm btn-p" onclick="showModal('illness')">+ 记录</button></div><div id="ill-list"></div></div>
+</div>
+
+<div class="page" id="pg-food">
+  <div class="search-box"><input type="text" id="food-search" placeholder="搜索食物名称..." oninput="filterFoods()"></div>
+  <div class="card hl-urgent"><div class="ct">☠️ 常见危险食物警示</div><div id="danger-list"></div></div>
+  <div class="cat-tabs" id="food-cats"></div>
+  <div id="food-list"></div>
+</div>
+
+<div class="page" id="pg-walk">
+  <div id="walk-weather"></div>
+  <div class="card"><div class="ct">⏱️ 遛狗计时器</div>
+    <div class="timer-d" id="timer">00:00:00</div>
+    <div class="fg"><div class="tg" id="walk-who" style="justify-content:center;margin-bottom:8px"></div></div>
+    <div class="fg"><div class="tg" id="walk-dog" style="justify-content:center;margin-bottom:8px"></div></div>
+    <div class="timer-c"><button class="btn btn-p" id="btn-start" onclick="toggleTimer()">🐾 开始遛狗</button></div>
+  </div>
+  <div class="card" id="poop-card" style="display:none"><div class="ct">💩 大小便记录</div>
+    <div class="tg" style="justify-content:center;margin-bottom:10px">
+      <button class="tb" onclick="addPoop('正常')">✅ 正常</button>
+      <button class="tb" onclick="addPoop('偏软')">⚠️ 偏软</button>
+      <button class="tb" onclick="addPoop('异常')">❌ 异常</button>
+    </div><div id="poop-recs"></div>
+  </div>
+  <div class="card"><div class="sh"><div class="ct">👨‍👩‍👧‍👦 遛狗轮值</div><button class="btn btn-sm btn-o" onclick="showModal('duty')">设置</button></div>
+    <div class="duty-c"><div class="tsm tmut mb8">今天该谁遛？</div><div class="duty-p" id="duty-today"></div></div>
+  </div>
+  <div class="card"><div class="ct">📊 本周统计</div><div class="stats-g" id="week-stats"></div></div>
+  <div class="card"><div class="ct">📋 遛狗日志</div><div id="walk-logs"></div></div>
+</div>
+
+<div id="modal-box"></div>
+
+<div class="tab-bar">
+  <div class="tab-i active" onclick="switchTab('dash')"><span class="ic">🏠</span><span class="lb">首页</span></div>
+  <div class="tab-i" onclick="switchTab('health')"><span class="ic">❤️</span><span class="lb">健康</span></div>
+  <div class="tab-i" onclick="switchTab('food')"><span class="ic">🍖</span><span class="lb">食物</span></div>
+  <div class="tab-i" onclick="switchTab('walk')"><span class="ic">🦮</span><span class="lb">遛狗</span></div>
+</div>
+
+<script>
+// ==================== DATA LAYER ====================
+const LS = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem('dogbutler_'+k)) || d; } catch { return d; } },
+  set(k, v) { localStorage.setItem('dogbutler_'+k, JSON.stringify(v)); }
+};
+
+// Default dogs
+function getDefaultDogs() {
+  return [
+    { id: 1, name: '老大', breed: '', birthday: '', weight: '', allergies: '', neutered: false, avatar: '🐕' },
+    { id: 2, name: '老二', breed: '', birthday: '', weight: '', allergies: '', neutered: false, avatar: '🐶' }
+  ];
+}
+
+let dogs = LS.get('dogs', getDefaultDogs());
+let vaccines = LS.get('vaccines', []);
+let weights = LS.get('weights', []);
+let illnesses = LS.get('illnesses', []);
+let walkLogs = LS.get('walkLogs', []);
+let poopLogs = LS.get('poopLogs', []);
+let favFoods = LS.get('favFoods', []);
+let dutyMembers = LS.get('dutyMembers', ['爸爸', '妈妈']);
+let weatherData = null;
+let currentDog = 0; // index
+let timerRunning = false;
+let timerStart = null;
+let timerInterval = null;
+let currentWalkWho = '';
+let currentWalkDog = '';
+let currentPoops = [];
+
+function save() {
+  LS.set('dogs', dogs);
+  LS.set('vaccines', vaccines);
+  LS.set('weights', weights);
+  LS.set('illnesses', illnesses);
+  LS.set('walkLogs', walkLogs);
+  LS.set('poopLogs', poopLogs);
+  LS.set('favFoods', favFoods);
+  LS.set('dutyMembers', dutyMembers);
+}
+
+// ==================== FOOD DATABASE (100+ items) ====================
+const FOODS = [
+  // 水果
+  {name:'苹果',cat:'水果',icon:'🍎',safety:'safe',note:'去核去籽，果核含氰苷有毒',dose:'小块2-3片'},
+  {name:'香蕉',cat:'水果',icon:'🍌',safety:'safe',note:'高糖，适量喂食',dose:'小型犬半根，大型犬一根'},
+  {name:'蓝莓',cat:'水果',icon:'🫐',safety:'safe',note:'富含抗氧化剂，非常好的零食',dose:'5-10颗'},
+  {name:'西瓜',cat:'水果',icon:'🍉',safety:'safe',note:'去皮去籽，水分多注意别喂太多',dose:'小块3-5片'},
+  {name:'草莓',cat:'水果',icon:'🍓',safety:'safe',note:'富含维C，适量喂食',dose:'2-4颗'},
+  {name:'芒果',cat:'水果',icon:'🥭',safety:'safe',note:'去皮去核，少量尝试',dose:'小块2-3片'},
+  {name:'橘子',cat:'水果',icon:'🍊',safety:'caution',note:'柑橘类可能引起肠胃不适',dose:'1-2瓣'},
+  {name:'葡萄',cat:'水果',icon:'🍇',safety:'toxic',note:'⚠️ 极度危险！可导致急性肾衰竭',dose:'绝对禁止'},
+  {name:'葡萄干',cat:'水果',icon:'🍇',safety:'toxic',note:'⚠️ 比葡萄更危险！浓缩毒素',dose:'绝对禁止'},
+  {name:'牛油果',cat:'水果',icon:'🥑',safety:'toxic',note:'含persin毒素，可致呕吐腹泻',dose:'绝对禁止'},
+  {name:'樱桃',cat:'水果',icon:'🍒',safety:'caution',note:'果肉少量可以，核/茎/叶有毒',dose:'去核1-2颗'},
+  {name:'梨',cat:'水果',icon:'🍐',safety:'safe',note:'去核去籽，水分充足',dose:'小块2-3片'},
+  {name:'桃子',cat:'水果',icon:'🍑',safety:'caution',note:'去核！桃核有毒且可能卡喉',dose:'去核小块2片'},
+  {name:'菠萝',cat:'水果',icon:'🍍',safety:'caution',note:'可能引起口腔刺激，少量尝试',dose:'小块1-2片'},
+  {name:'猕猴桃',cat:'水果',icon:'🥝',safety:'safe',note:'去皮，富含维C',dose:'小块2-3片'},
+  {name:'柚子',cat:'水果',icon:'🍊',safety:'caution',note:'柑橘类可能刺激肠胃',dose:'1-2瓣'},
+  {name:'椰子',cat:'水果',icon:'🥥',safety:'caution',note:'椰肉高脂肪，少量即可',dose:'小块1-2片'},
+  {name:'木瓜',cat:'水果',icon:'🍈',safety:'safe',note:'去皮去籽，助消化',dose:'小块2-3片'},
+  {name:'哈密瓜',cat:'水果',icon:'🍈',safety:'safe',note:'去皮去籽，糖分较高',dose:'小块2-3片'},
+  {name:'火龙果',cat:'水果',icon:'🍈',safety:'safe',note:'可能导致粪便变色，正常现象',dose:'小块2-3片'},
+  {name:'柿子',cat:'水果',icon:'🍅',safety:'caution',note:'柿子籽可能引起肠梗阻',dose:'去籽少量'},
+  {name:'荔枝',cat:'水果',icon:'🍒',safety:'caution',note:'高糖，过量可能导致低血糖',dose:'去核1-2颗'},
+  {name:'石榴',cat:'水果',icon:'🍎',safety:'caution',note:'籽可能引起消化问题',dose:'少量果肉'},
+
+  // 蔬菜
+  {name:'胡萝卜',cat:'蔬菜',icon:'🥕',safety:'safe',note:'煮熟更好吸收，磨牙零食佳品',dose:'半根切小块'},
+  {name:'南瓜',cat:'蔬菜',icon:'🎃',safety:'safe',note:'煮熟，对肠胃很好，可缓解腹泻',dose:'2-3勺泥'},
+  {name:'红薯',cat:'蔬菜',icon:'🍠',safety:'safe',note:'煮熟，高纤维助消化',dose:'小块2-3片'},
+  {name:'西兰花',cat:'蔬菜',icon:'🥦',safety:'safe',note:'煮熟切碎，少量喂食',dose:'1-2小朵'},
+  {name:'黄瓜',cat:'蔬菜',icon:'🥒',safety:'safe',note:'低热量，适合减肥狗狗',dose:'几片'},
+  {name:'菠菜',cat:'蔬菜',icon:'🥬',safety:'caution',note:'含草酸，长期大量可能影响钙吸收',dose:'少量煮熟'},
+  {name:'洋葱',cat:'蔬菜',icon:'🧅',safety:'toxic',note:'⚠️ 极度危险！破坏红血球导致溶血性贫血',dose:'绝对禁止'},
+  {name:'大蒜',cat:'蔬菜',icon:'🧄',safety:'toxic',note:'⚠️ 极度危险！与洋葱同属百合科，导致贫血',dose:'绝对禁止'},
+  {name:'韭菜',cat:'蔬菜',icon:'🌿',safety:'toxic',note:'⚠️ 与大蒜洋葱同科，极度危险',dose:'绝对禁止'},
+  {name:'大葱',cat:'蔬菜',icon:'🧅',safety:'toxic',note:'⚠️ 百合科植物，导致溶血性贫血',dose:'绝对禁止'},
+  {name:'芹菜',cat:'蔬菜',icon:'🌿',safety:'safe',note:'富含纤维和维生素，可清新口气',dose:'小段2-3根'},
+  {name:'生菜',cat:'蔬菜',icon:'🥬',safety:'safe',note:'低热量，水分多',dose:'几片'},
+  {name:'白菜',cat:'蔬菜',icon:'🥬',safety:'safe',note:'煮熟更易消化',dose:'适量煮熟'},
+  {name:'土豆',cat:'蔬菜',icon:'🥔',safety:'caution',note:'必须煮熟！生土豆含龙葵碱有毒',dose:'煮熟小块'},
+  {name:'番茄',cat:'蔬菜',icon:'🍅',safety:'caution',note:'成熟果肉可以，青色未熟和茎叶有毒',dose:'成熟果肉少量'},
+  {name:'豌豆',cat:'蔬菜',icon:'🫛',safety:'safe',note:'煮熟，蛋白质来源好',dose:'1-2勺'},
+  {name:'四季豆',cat:'蔬菜',icon:'🫘',safety:'caution',note:'必须完全煮熟，生的有毒',dose:'煮熟少量'},
+  {name:'玉米',cat:'蔬菜',icon:'🌽',safety:'safe',note:'去芯切粒，玉米芯可能堵塞肠道',dose:'1-2勺玉米粒'},
+  {name:'蘑菇(食用)',cat:'蔬菜',icon:'🍄',safety:'caution',note:'超市买的可以少量，野生蘑菇绝对禁止',dose:'少量煮熟'},
+  {name:'花椰菜',cat:'蔬菜',icon:'🥦',safety:'safe',note:'煮熟切碎，可能引起胀气',dose:'少量'},
+  {name:'莲藕',cat:'蔬菜',icon:'🌿',safety:'safe',note:'煮熟切小块',dose:'少量'},
+  {name:'山药',cat:'蔬菜',icon:'🥔',safety:'safe',note:'煮熟，助消化',dose:'少量煮熟'},
+
+  // 肉类
+  {name:'鸡胸肉',cat:'肉类',icon:'🍗',safety:'safe',note:'煮熟无调料，优质蛋白来源',dose:'适量'},
+  {name:'牛肉',cat:'肉类',icon:'🥩',safety:'safe',note:'煮熟无调料，高蛋白',dose:'适量'},
+  {name:'三文鱼',cat:'肉类',icon:'🐟',safety:'safe',note:'煮熟！生三文鱼可能含寄生虫',dose:'适量煮熟'},
+  {name:'猪肉',cat:'肉类',icon:'🥓',safety:'caution',note:'必须完全煮熟，脂肪较高',dose:'瘦肉少量'},
+  {name:'鸭肉',cat:'肉类',icon:'🦆',safety:'safe',note:'煮熟去骨，低敏蛋白源',dose:'适量'},
+  {name:'羊肉',cat:'肉类',icon:'🍖',safety:'safe',note:'煮熟，脂肪较高适量',dose:'适量'},
+  {name:'鸡蛋',cat:'肉类',icon:'🥚',safety:'safe',note:'煮熟，优质蛋白和脂肪酸',dose:'小型犬半个，大型犬1个'},
+  {name:'虾',cat:'肉类',icon:'🦐',safety:'safe',note:'去壳煮熟，少数狗可能过敏',dose:'2-3只'},
+  {name:'鸡肝',cat:'肉类',icon:'🫀',safety:'caution',note:'富含维A，过量可致中毒',dose:'每周1-2次少量'},
+  {name:'骨头(大骨)',cat:'肉类',icon:'🦴',safety:'caution',note:'生大骨可以啃，煮熟骨头易碎裂扎伤',dose:'大块生骨'},
+  {name:'鸡骨头',cat:'肉类',icon:'🍗',safety:'toxic',note:'⚠️ 煮熟鸡骨易碎裂，可能刺穿消化道',dose:'绝对禁止'},
+  {name:'火腿肠',cat:'肉类',icon:'🌭',safety:'caution',note:'高盐高添加剂，偶尔少量',dose:'小块少量'},
+  {name:'鱼(淡水)',cat:'肉类',icon:'🐟',safety:'caution',note:'必须去刺煮熟，淡水鱼可能有寄生虫',dose:'去刺煮熟适量'},
+  {name:'兔肉',cat:'肉类',icon:'🐰',safety:'safe',note:'低脂高蛋白，煮熟无调料',dose:'适量'},
+  {name:'鹿肉',cat:'肉类',icon:'🦌',safety:'safe',note:'低敏蛋白源，适合过敏狗狗',dose:'适量'},
+
+  // 零食
+  {name:'酸奶(无糖)',cat:'零食',icon:'🥛',safety:'safe',note:'无糖原味，益生菌对肠胃好',dose:'1-2勺'},
+  {name:'奶酪',cat:'零食',icon:'🧀',safety:'caution',note:'少量可以，乳糖不耐的狗避免',dose:'小块1-2片'},
+  {name:'花生酱(无糖)',cat:'零食',icon:'🥜',safety:'caution',note:'确认不含木糖醇！无糖无盐款可以',dose:'1小勺'},
+  {name:'花生',cat:'零食',icon:'🥜',safety:'caution',note:'无盐烤花生少量，高脂肪',dose:'几颗'},
+  {name:'腰果',cat:'零食',icon:'🌰',safety:'caution',note:'无盐少量，高脂肪',dose:'2-3颗'},
+  {name:'夏威夷果',cat:'零食',icon:'🌰',safety:'toxic',note:'⚠️ 可导致虚弱、呕吐、高热、颤抖',dose:'绝对禁止'},
+  {name:'核桃',cat:'零食',icon:'🌰',safety:'caution',note:'少量无盐的可以，发霉的有毒',dose:'半颗'},
+  {name:'栗子',cat:'零食',icon:'🌰',safety:'safe',note:'煮熟去壳，高淀粉适量',dose:'1-2颗'},
+  {name:'蜂蜜',cat:'零食',icon:'🍯',safety:'caution',note:'少量可以，糖分高。幼犬不建议',dose:'半勺'},
+  {name:'椰子油',cat:'零食',icon:'🥥',safety:'safe',note:'少量可改善皮肤和毛发',dose:'半勺'},
+  {name:'冰淇淋',cat:'零食',icon:'🍦',safety:'caution',note:'乳糖不耐问题，高糖高脂',dose:'偶尔舔几口'},
+  {name:'爆米花(原味)',cat:'零食',icon:'🍿',safety:'caution',note:'无盐无油原味，偶尔几颗',dose:'几颗'},
+  {name:'红枣',cat:'零食',icon:'🫘',safety:'caution',note:'去核少量，高糖',dose:'去核1-2颗'},
+  {name:'枸杞',cat:'零食',icon:'🔴',safety:'safe',note:'少量可以，抗氧化',dose:'几颗'},
+
+  // 人类食品
+  {name:'巧克力',cat:'人类食品',icon:'🍫',safety:'toxic',note:'⚠️ 极度危险！可可碱致命，黑巧更危险',dose:'绝对禁止'},
+  {name:'咖啡',cat:'人类食品',icon:'☕',safety:'toxic',note:'⚠️ 咖啡因对狗极度危险',dose:'绝对禁止'},
+  {name:'茶',cat:'人类食品',icon:'🍵',safety:'toxic',note:'⚠️ 含咖啡因，对狗有毒',dose:'绝对禁止'},
+  {name:'酒精',cat:'人类食品',icon:'🍺',safety:'toxic',note:'⚠️ 极度危险！很小量就可致命',dose:'绝对禁止'},
+  {name:'木糖醇',cat:'人类食品',icon:'🍬',safety:'toxic',note:'⚠️ 极度危险！导致胰岛素急升和肝衰竭',dose:'绝对禁止'},
+  {name:'口香糖',cat:'人类食品',icon:'🍬',safety:'toxic',note:'⚠️ 多数含木糖醇，极度危险',dose:'绝对禁止'},
+  {name:'米饭',cat:'人类食品',icon:'🍚',safety:'safe',note:'煮熟白米饭，肠胃不适时可作清淡食物',dose:'适量配肉'},
+  {name:'面包',cat:'人类食品',icon:'🍞',safety:'caution',note:'普通白面包少量可以，避免含葡萄干/木糖醇的',dose:'小块'},
+  {name:'面条',cat:'人类食品',icon:'🍜',safety:'safe',note:'煮熟无调料，碳水来源',dose:'少量'},
+  {name:'豆腐',cat:'人类食品',icon:'🧊',safety:'safe',note:'植物蛋白，少量可以',dose:'小块'},
+  {name:'盐',cat:'人类食品',icon:'🧂',safety:'caution',note:'少量调味即可，过量致钠中毒',dose:'极少量'},
+  {name:'糖',cat:'人类食品',icon:'🍭',safety:'caution',note:'不建议，可致肥胖和牙齿问题',dose:'尽量避免'},
+  {name:'辣椒',cat:'人类食品',icon:'🌶️',safety:'toxic',note:'刺激消化道，可致呕吐腹泻',dose:'绝对禁止'},
+  {name:'芥末',cat:'人类食品',icon:'🟡',safety:'toxic',note:'强刺激性，对狗有害',dose:'绝对禁止'},
+  {name:'生面团',cat:'人类食品',icon:'🍞',safety:'toxic',note:'⚠️ 酵母在胃中膨胀并产生酒精',dose:'绝对禁止'},
+  {name:'培根',cat:'人类食品',icon:'🥓',safety:'caution',note:'高盐高脂肪，偶尔小块',dose:'小块偶尔'},
+  {name:'薯片',cat:'人类食品',icon:'🍟',safety:'caution',note:'高盐高脂，不建议',dose:'偶尔1-2片'},
+  {name:'饼干(人用)',cat:'人类食品',icon:'🍪',safety:'caution',note:'高糖高脂，检查是否含木糖醇',dose:'小块偶尔'},
+  {name:'牛奶',cat:'人类食品',icon:'🥛',safety:'caution',note:'很多狗乳糖不耐，可致腹泻',dose:'少量试喂'},
+  {name:'奶粉(婴儿)',cat:'人类食品',icon:'🍼',safety:'caution',note:'应急可用，但最好用狗用羊奶粉',dose:'少量'},
+  {name:'火锅底料',cat:'人类食品',icon:'🍲',safety:'toxic',note:'含大量调料、葱蒜，绝对禁止',dose:'绝对禁止'},
+  {name:'酱油',cat:'人类食品',icon:'🫗',safety:'caution',note:'高钠，不建议',dose:'极少量'},
+  {name:'味精',cat:'人类食品',icon:'🧂',safety:'caution',note:'不建议给狗食用',dose:'避免'},
+  {name:'方便面',cat:'人类食品',icon:'🍜',safety:'caution',note:'高盐高添加剂，不建议',dose:'避免'},
+  {name:'香肠',cat:'人类食品',icon:'🌭',safety:'caution',note:'加工肉制品，高盐高添加剂',dose:'小块偶尔'},
+  {name:'月饼',cat:'人类食品',icon:'🥮',safety:'caution',note:'高糖高脂，部分含有毒成分',dose:'极少量'},
+  {name:'粽子',cat:'人类食品',icon:'🍙',safety:'caution',note:'糯米难消化',dose:'少量'},
+  {name:'麻薯',cat:'人类食品',icon:'🍡',safety:'caution',note:'糯米制品，可能噎住',dose:'避免'},
+  {name:'燕麦',cat:'人类食品',icon:'🥣',safety:'safe',note:'煮熟无糖，纤维丰富',dose:'1-2勺'},
+  {name:'南瓜子',cat:'人类食品',icon:'🎃',safety:'safe',note:'无盐，可能有驱虫效果',dose:'几颗磨碎'},
+];
+
+const AVATARS = ['🐕','🐶','🐕‍🦺','🦮','🐩','🐾','🐺','🐻'];
+
+// ==================== VACCINE TYPES ====================
+const VACC_TYPES = [
+  { name: '狂犬疫苗', intervalDays: 365 },
+  { name: '联苗(犬瘟/细小等)', intervalDays: 365 },
+  { name: '体内驱虫', intervalDays: 90 },
+  { name: '体外驱虫', intervalDays: 30 },
+];
+
+// ==================== WEATHER ====================
+async function fetchWeather() {
+  try {
+    const r = await fetch('https://wttr.in/?format=j1');
+    const d = await r.json();
+    const cur = d.current_condition[0];
+    weatherData = {
+      temp: cur.temp_C,
+      feels: cur.FeelsLikeC,
+      desc: cur.lang_zh && cur.lang_zh[0] ? cur.lang_zh[0].value : cur.weatherDesc[0].value,
+      humidity: cur.humidity,
+      icon: getWeatherIcon(cur.weatherCode)
+    };
+    renderWeather();
+  } catch(e) {
+    weatherData = null;
+  }
+}
+
+function getWeatherIcon(code) {
+  const c = parseInt(code);
+  if (c === 113) return '☀️';
+  if (c === 116) return '⛅';
+  if ([119,122].includes(c)) return '☁️';
+  if ([176,263,266,293,296,299,302,305,308,311,314,317,353,356,359].includes(c)) return '🌧️';
+  if ([200,386,389,392,395].includes(c)) return '⛈️';
+  if ([227,230,323,326,329,332,335,338,368,371,374,377].includes(c)) return '❄️';
+  if ([143,248,260].includes(c)) return '🌫️';
+  return '🌤️';
+}
+
+function renderWeather() {
+  if (!weatherData) return;
+  const alerts = [];
+  if (parseInt(weatherData.temp) >= 35) alerts.push('🔥 高温警告！路面可能烫伤狗爪，建议清晨或傍晚遛狗');
+  if (parseInt(weatherData.temp) >= 30) alerts.push('☀️ 气温较高，注意防暑，多带水');
+  if (weatherData.desc.includes('雨') || weatherData.desc.includes('暴')) alerts.push('🌧️ 有雨，建议缩短遛狗时间或穿雨衣');
+  if (parseInt(weatherData.temp) <= 0) alerts.push('🥶 气温极低，注意保暖，小型犬建议穿衣');
+
+  const whtml = `<div class="weather-w"><div><div class="weather-t">${weatherData.icon} ${weatherData.temp}°C</div><div class="weather-d">体感 ${weatherData.feels}°C · ${weatherData.desc} · 湿度${weatherData.humidity}%</div></div></div>`;
+  const ahtml = alerts.map(a => `<div class="weather-alert">${a}</div>`).join('');
+
+  document.getElementById('weather-box').innerHTML = whtml + ahtml;
+  document.getElementById('walk-weather').innerHTML = whtml + ahtml;
+}
+
+// ==================== TAB NAVIGATION ====================
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-i').forEach(t => t.classList.remove('active'));
+  const map = { dash: 0, health: 1, food: 2, walk: 3 };
+  document.getElementById('pg-' + tab).classList.add('active');
+  document.querySelectorAll('.tab-i')[map[tab]].classList.add('active');
+  if (tab === 'dash') renderDashboard();
+  if (tab === 'health') renderHealth();
+  if (tab === 'food') renderFoodPage();
+  if (tab === 'walk') renderWalk();
+}
+
+// ==================== MODAL ====================
+function closeModal() { document.getElementById('modal-box').innerHTML = ''; }
+
+function openModal(title, bodyHtml) {
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-ov" onclick="if(event.target===this)closeModal()">
+      <div class="modal-c">
+        <div class="modal-h"><h3>${title}</h3><button class="modal-x" onclick="closeModal()">✕</button></div>
+        ${bodyHtml}
+      </div>
+    </div>`;
+}
+
+function showModal(type) {
+  if (type === 'vaccine') showVaccineModal();
+  else if (type === 'weight') showWeightModal();
+  else if (type === 'illness') showIllnessModal();
+  else if (type === 'duty') showDutyModal();
+}
+
+// ==================== DASHBOARD ====================
+function renderDashboard() {
+  renderWeather();
+  let html = '';
+  dogs.forEach((dog, i) => {
+    const nextVacc = getNextVaccine(dog.id);
+    const todayWalked = getTodayWalkCount(dog.id);
+    const lastWeight = getLastWeight(dog.id);
+    const wArr = weights.filter(w => w.dogId === dog.id).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    html += `<div class="dog-card">
+      <div class="dog-hdr">
+        <div class="dog-av">${dog.avatarImg ? `<img src="${dog.avatarImg}">` : dog.avatar}</div>
+        <div><div style="font-size:16px;font-weight:700">${dog.name || '未命名'}</div>
+          <div style="font-size:12px;color:var(--txt-l)">${dog.breed || '未设品种'} ${dog.birthday ? '· '+getAge(dog.birthday) : ''}</div></div>
+      </div>
+      <div class="dog-stats">
+        <div class="stat-i"><div class="stat-v">${nextVacc ? nextVacc.days + '天' : '--'}</div><div class="stat-l">${nextVacc ? nextVacc.type : '下次疫苗'}</div></div>
+        <div class="stat-i"><div class="stat-v">${todayWalked}</div><div class="stat-l">今日遛狗次数</div></div>
+        <div class="stat-i"><div class="stat-v">${lastWeight ? lastWeight.value + 'kg' : '--'}</div><div class="stat-l">最新体重</div></div>
+      </div>
+      <canvas class="mini-chart" id="mini-chart-${i}" width="300" height="40"></canvas>
+    </div>`;
+  });
+  document.getElementById('dash-dogs').innerHTML = html;
+  // Draw mini charts
+  dogs.forEach((dog, i) => {
+    const canvas = document.getElementById('mini-chart-' + i);
+    if (canvas) drawMiniChart(canvas, weights.filter(w => w.dogId === dog.id));
+  });
+
+  // Today duty
+  const duty = getTodayDuty();
+  document.getElementById('today-duty').innerHTML = `<div style="font-size:14px;margin-bottom:8px">🧑 今日轮值: <strong style="color:var(--sec)">${duty}</strong></div>`;
+
+  // Today walks
+  const todayLogs = walkLogs.filter(w => w.date === todayStr());
+  if (todayLogs.length === 0) {
+    document.getElementById('today-walks').innerHTML = '<div class="tsm tmut">今天还没有遛狗记录</div>';
+  } else {
+    document.getElementById('today-walks').innerHTML = todayLogs.map(w =>
+      `<div class="tsm" style="margin-bottom:4px">🐾 ${w.walker} 遛了 ${w.dogName} ${formatDuration(w.duration)}</div>`
+    ).join('');
+  }
+
+  // Alerts
+  renderAlerts();
+}
+
+function renderAlerts() {
+  const alerts = [];
+  const today = new Date();
+  vaccines.forEach(v => {
+    const vType = VACC_TYPES.find(t => t.name === v.type);
+    if (!vType) return;
+    const nextDate = new Date(v.date);
+    nextDate.setDate(nextDate.getDate() + vType.intervalDays);
+    const diff = Math.ceil((nextDate - today) / 86400000);
+    const dogName = dogs.find(d => d.id === v.dogId)?.name || '?';
+    if (diff <= 3 && diff >= 0) {
+      alerts.push({ urgent: true, text: `🚨 ${dogName} 的${v.type}将在 ${diff === 0 ? '今天' : diff + '天后'} 到期！` });
+    } else if (diff < 0) {
+      alerts.push({ urgent: true, text: `⚠️ ${dogName} 的${v.type}已过期 ${Math.abs(diff)} 天！` });
+    } else if (diff <= 7) {
+      alerts.push({ urgent: false, text: `📅 ${dogName} 的${v.type}将在 ${diff} 天后到期` });
+    }
+  });
+  if (alerts.length === 0) {
+    document.getElementById('alert-list').innerHTML = '<div class="empty-s"><div style="font-size:48px;margin-bottom:8px">😊</div><p>暂无提醒，一切安好！</p></div>';
+  } else {
+    document.getElementById('alert-list').innerHTML = alerts.map(a =>
+      `<div class="${a.urgent ? 'hl-urgent' : ''}" style="padding:8px 12px;border-radius:var(--rad-s);margin-bottom:6px;font-size:13px">${a.text}</div>`
+    ).join('');
+  }
+}
+
+function getAge(birthday) {
+  const bd = new Date(birthday);
+  const today = new Date();
+  let years = today.getFullYear() - bd.getFullYear();
+  let months = today.getMonth() - bd.getMonth();
+  if (months < 0) { years--; months += 12; }
+  if (years > 0) return years + '岁' + (months > 0 ? months + '月' : '');
+  return months + '个月';
+}
+
+function getNextVaccine(dogId) {
+  const today = new Date();
+  let nearest = null;
+  vaccines.filter(v => v.dogId === dogId).forEach(v => {
+    const vType = VACC_TYPES.find(t => t.name === v.type);
+    if (!vType) return;
+    const nextDate = new Date(v.date);
+    nextDate.setDate(nextDate.getDate() + vType.intervalDays);
+    const diff = Math.ceil((nextDate - today) / 86400000);
+    if (!nearest || diff < nearest.days) {
+      nearest = { type: v.type.replace(/\(.*\)/, ''), days: diff, date: nextDate };
+    }
+  });
+  return nearest;
+}
+
+function getTodayWalkCount(dogId) {
+  const dog = dogs.find(d => d.id === dogId);
+  return walkLogs.filter(w => w.date === todayStr() && (w.dogName === dog?.name || w.dogName === '一起')).length;
+}
+
+function getLastWeight(dogId) {
+  const ws = weights.filter(w => w.dogId === dogId).sort((a,b) => new Date(b.date) - new Date(a.date));
+  return ws[0] || null;
+}
+
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+function drawMiniChart(canvas, data) {
+  if (!data.length) return;
+  const sorted = [...data].sort((a,b) => new Date(a.date) - new Date(b.date));
+  const vals = sorted.map(d => parseFloat(d.value));
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width = canvas.offsetWidth * 2;
+  const h = canvas.height = 80;
+  ctx.clearRect(0, 0, w, h);
+  if (vals.length < 2) return;
+  const min = Math.min(...vals) * 0.95;
+  const max = Math.max(...vals) * 1.05;
+  const range = max - min || 1;
+  const padX = 10, padY = 8;
+  const stepX = (w - padX * 2) / (vals.length - 1);
+
+  ctx.beginPath();
+  ctx.strokeStyle = '#FF6B6B';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  vals.forEach((v, i) => {
+    const x = padX + i * stepX;
+    const y = padY + (1 - (v - min) / range) * (h - padY * 2);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+}
+
+// ==================== HEALTH MODULE ====================
+function renderHealth() {
+  // Profile tabs
+  document.getElementById('h-pt').innerHTML = dogs.map((d, i) =>
+    `<div class="pt-i ${i === currentDog ? 'active' : ''}" onclick="currentDog=${i};renderHealth()">${d.avatar} ${d.name || '未命名'}</div>`
+  ).join('');
+
+  const dog = dogs[currentDog];
+  // Profile info
+  if (!dog.name && !dog.breed) {
+    document.getElementById('h-pinfo').innerHTML = `<div class="empty-s">
+      <div style="font-size:48px;margin-bottom:8px">🐕</div>
+      <p>还没有建档哦，点击编辑开始吧！</p></div>`;
+  } else {
+    document.getElementById('h-pinfo').innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <div class="dog-av" style="width:64px;height:64px;font-size:32px">${dog.avatarImg ? `<img src="${dog.avatarImg}">` : dog.avatar}</div>
+        <div>
+          <div style="font-size:18px;font-weight:700">${dog.name}</div>
+          <div class="tsm" style="color:var(--txt-l)">${dog.breed || '未设品种'}</div>
+        </div>
+      </div>
+      <div class="tsm" style="color:var(--txt-l);line-height:1.8">
+        ${dog.birthday ? '🎂 生日: ' + dog.birthday + ' (' + getAge(dog.birthday) + ')' : ''}
+        ${dog.weight ? '<br>⚖️ 体重: ' + dog.weight + 'kg' : ''}
+        ${dog.allergies ? '<br>⚠️ 过敏源: ' + dog.allergies : ''}
+        <br>${dog.neutered ? '✅ 已绝育' : '❌ 未绝育'}
+      </div>`;
+  }
+
+  // Vaccines
+  renderVaccines();
+  // Weight chart
+  renderWeightChart();
+  // Illnesses
+  renderIllnesses();
+}
+
+function editDog() {
+  const dog = dogs[currentDog];
+  const avatarHtml = AVATARS.map(a =>
+    `<div class="av-o ${dog.avatar === a ? 'selected' : ''}" onclick="this.parentNode.querySelectorAll('.av-o').forEach(e=>e.classList.remove('selected'));this.classList.add('selected');document.getElementById('sel-avatar').value='${a}'">${a}</div>`
+  ).join('');
+
+  openModal('🐕 编辑狗狗档案', `
+    <input type="hidden" id="sel-avatar" value="${dog.avatar}">
+    <div class="fg"><label class="fl">头像</label><div class="av-opts">${avatarHtml}</div>
+      <div style="margin-top:4px"><label class="fl">或上传照片</label><input type="file" accept="image/*" id="avatar-file" class="fi" onchange="previewAvatar(this)"></div>
+    </div>
+    <div class="fg"><label class="fl">名字</label><input class="fi" id="dog-name" value="${dog.name}" placeholder="如：旺财"></div>
+    <div class="fg"><label class="fl">品种</label><input class="fi" id="dog-breed" value="${dog.breed}" placeholder="如：金毛"></div>
+    <div class="fg"><label class="fl">生日</label><input class="fi" type="date" id="dog-bday" value="${dog.birthday}"></div>
+    <div class="fg"><label class="fl">体重(kg)</label><input class="fi" type="number" step="0.1" id="dog-weight" value="${dog.weight}" placeholder="如：12.5"></div>
+    <div class="fg"><label class="fl">过敏源</label><input class="fi" id="dog-allergy" value="${dog.allergies || ''}" placeholder="如：鸡肉、花粉"></div>
+    <div class="fg"><label class="fl">绝育状态</label>
+      <div class="tg"><button class="tb ${dog.neutered ? 'active' : ''}" onclick="this.classList.toggle('active');this.nextElementSibling.classList.remove('active')" id="neut-yes">已绝育</button>
+      <button class="tb ${!dog.neutered ? 'active' : ''}" onclick="this.classList.toggle('active');this.previousElementSibling.classList.remove('active')" id="neut-no">未绝育</button></div>
+    </div>
+    <button class="btn btn-p btn-blk mt8" onclick="saveDog()">🐾 保存</button>
+  `);
+}
+
+function previewAvatar(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('sel-avatar').value = '';
+      document.getElementById('sel-avatar').dataset.img = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function saveDog() {
+  const dog = dogs[currentDog];
+  const avatarEl = document.getElementById('sel-avatar');
+  dog.avatar = avatarEl.value || dog.avatar;
+  if (avatarEl.dataset && avatarEl.dataset.img) dog.avatarImg = avatarEl.dataset.img;
+  else if (avatarEl.value) delete dog.avatarImg;
+  dog.name = document.getElementById('dog-name').value;
+  dog.breed = document.getElementById('dog-breed').value;
+  dog.birthday = document.getElementById('dog-bday').value;
+  dog.weight = document.getElementById('dog-weight').value;
+  dog.allergies = document.getElementById('dog-allergy').value;
+  dog.neutered = document.getElementById('neut-yes').classList.contains('active');
+  save();
+  closeModal();
+  renderHealth();
+}
+
+// ==================== VACCINES ====================
+function renderVaccines() {
+  const dog = dogs[currentDog];
+  const vs = vaccines.filter(v => v.dogId === dog.id).sort((a,b) => new Date(b.date) - new Date(a.date));
+  if (vs.length === 0) {
+    document.getElementById('vacc-list').innerHTML = '<div class="empty-s"><div style="font-size:40px;margin-bottom:8px">💉</div><p>暂无疫苗/驱虫记录</p></div>';
+    return;
+  }
+  const today = new Date();
+  document.getElementById('vacc-list').innerHTML = vs.map(v => {
+    const vType = VACC_TYPES.find(t => t.name === v.type);
+    let nextDate = '', daysLeft = '', cls = '';
+    if (vType) {
+      const nd = new Date(v.date);
+      nd.setDate(nd.getDate() + vType.intervalDays);
+      nextDate = nd.toISOString().slice(0, 10);
+      const diff = Math.ceil((nd - today) / 86400000);
+      daysLeft = diff;
+      if (diff <= 3) cls = 'hl-urgent';
+    }
+    return `<div class="${cls}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdr)">
+      <div><div style="font-weight:600;font-size:13px">${v.type}</div>
+        <div class="tsm tmut">接种: ${v.date}</div>
+        ${nextDate ? `<div class="tsm" style="color:${daysLeft <= 3 ? 'var(--dng)' : daysLeft <= 7 ? 'var(--wrn)' : 'var(--suc)'}">下次: ${nextDate} (${daysLeft <= 0 ? '已过期' : daysLeft + '天后'})</div>` : ''}
+      </div>
+      <button class="del-b" onclick="deleteVaccine('${v.id}')">🗑️</button>
+    </div>`;
+  }).join('');
+}
+
+function showVaccineModal() {
+  const dog = dogs[currentDog];
+  const typeOpts = VACC_TYPES.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+  openModal('💉 添加疫苗/驱虫记录', `
+    <div class="fg"><label class="fl">类型</label><select class="fsel" id="vacc-type">${typeOpts}</select></div>
+    <div class="fg"><label class="fl">接种日期</label><input class="fi" type="date" id="vacc-date" value="${todayStr()}"></div>
+    <button class="btn btn-p btn-blk mt8" onclick="addVaccine()">💉 添加记录</button>
+  `);
+}
+
+function addVaccine() {
+  const dog = dogs[currentDog];
+  vaccines.push({
+    id: Date.now().toString(),
+    dogId: dog.id,
+    type: document.getElementById('vacc-type').value,
+    date: document.getElementById('vacc-date').value
+  });
+  save();
+  closeModal();
+  renderHealth();
+}
+
+function deleteVaccine(id) {
+  vaccines = vaccines.filter(v => v.id !== id);
+  save();
+  renderHealth();
+}
+
+// ==================== WEIGHT ====================
+function renderWeightChart() {
+  const dog = dogs[currentDog];
+  const ws = weights.filter(w => w.dogId === dog.id).sort((a,b) => new Date(a.date) - new Date(b.date));
+  const canvas = document.getElementById('wt-chart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 160 * dpr;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = '160px';
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, rect.width, 160);
+
+  if (ws.length === 0) {
+    ctx.fillStyle = '#B2BEC3';
+    ctx.font = '14px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('暂无体重数据', rect.width / 2, 80);
+    document.getElementById('wt-recs').innerHTML = '';
+    return;
+  }
+
+  const vals = ws.map(w => parseFloat(w.value));
+  const min = Math.min(...vals) * 0.9;
+  const max = Math.max(...vals) * 1.1;
+  const range = max - min || 1;
+  const padL = 40, padR = 20, padT = 20, padB = 30;
+  const cw = rect.width - padL - padR;
+  const ch = 160 - padT - padB;
+
+  // Grid
+  ctx.strokeStyle = '#F0E6DE';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (ch / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(rect.width - padR, y);
+    ctx.stroke();
+    ctx.fillStyle = '#B2BEC3';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'right';
+    ctx.fillText((max - (range / 4) * i).toFixed(1), padL - 4, y + 3);
+  }
+
+  // Line
+  const stepX = ws.length > 1 ? cw / (ws.length - 1) : 0;
+  ctx.beginPath();
+  ctx.strokeStyle = '#FF6B6B';
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  vals.forEach((v, i) => {
+    const x = padL + i * stepX;
+    const y = padT + (1 - (v - min) / range) * ch;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Fill area
+  ctx.lineTo(padL + (vals.length - 1) * stepX, padT + ch);
+  ctx.lineTo(padL, padT + ch);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255,107,107,0.1)';
+  ctx.fill();
+
+  // Dots
+  vals.forEach((v, i) => {
+    const x = padL + i * stepX;
+    const y = padT + (1 - (v - min) / range) * ch;
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#FF6B6B';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+
+  // X labels
+  ctx.fillStyle = '#B2BEC3';
+  ctx.font = '9px system-ui';
+  ctx.textAlign = 'center';
+  ws.forEach((w, i) => {
+    if (ws.length <= 7 || i % Math.ceil(ws.length / 7) === 0) {
+      const x = padL + i * stepX;
+      ctx.fillText(w.date.slice(5), x, 160 - 6);
+    }
+  });
+
+  // Weight records list
+  const recent = [...ws].reverse().slice(0, 5);
+  document.getElementById('wt-recs').innerHTML = recent.map(w =>
+    `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:13px">
+      <span>${w.date}</span><span style="font-weight:600">${w.value} kg</span>
+      <button class="del-b" onclick="deleteWeight('${w.id}')">🗑️</button>
+    </div>`
+  ).join('');
+}
+
+function showWeightModal() {
+  openModal('⚖️ 记录体重', `
+    <div class="fg"><label class="fl">日期</label><input class="fi" type="date" id="wt-date" value="${todayStr()}"></div>
+    <div class="fg"><label class="fl">体重(kg)</label><input class="fi" type="number" step="0.1" id="wt-val" placeholder="如：12.5"></div>
+    <button class="btn btn-p btn-blk mt8" onclick="addWeight()">⚖️ 保存</button>
+  `);
+}
+
+function addWeight() {
+  const dog = dogs[currentDog];
+  const val = document.getElementById('wt-val').value;
+  if (!val) return;
+  weights.push({
+    id: Date.now().toString(),
+    dogId: dog.id,
+    date: document.getElementById('wt-date').value,
+    value: val
+  });
+  save();
+  closeModal();
+  renderHealth();
+}
+
+function deleteWeight(id) {
+  weights = weights.filter(w => w.id !== id);
+  save();
+  renderHealth();
+}
+
+// ==================== ILLNESS ====================
+function renderIllnesses() {
+  const dog = dogs[currentDog];
+  const ills = illnesses.filter(i => i.dogId === dog.id).sort((a,b) => new Date(b.date) - new Date(a.date));
+  if (ills.length === 0) {
+    document.getElementById('ill-list').innerHTML = '<div class="empty-s"><div style="font-size:40px;margin-bottom:8px">🏥</div><p>暂无生病记录，健健康康 🎉</p></div>';
+    return;
+  }
+  document.getElementById('ill-list').innerHTML = ills.map(il => `
+    <div style="padding:10px;border-radius:var(--rad-s);background:rgba(255,107,107,.04);margin-bottom:8px;border:1px solid var(--bdr)">
+      <div class="fb"><div style="font-weight:600;font-size:13px">📅 ${il.date}</div><button class="del-b" onclick="deleteIllness('${il.id}')">🗑️</button></div>
+      <div class="tsm" style="margin-top:4px;color:var(--txt-l)">🤒 症状: ${il.symptoms}</div>
+      ${il.medicine ? `<div class="tsm" style="color:var(--txt-l)">💊 用药: ${il.medicine}</div>` : ''}
+      ${il.cost ? `<div class="tsm" style="color:var(--txt-l)">💰 花费: ¥${il.cost}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function showIllnessModal() {
+  openModal('🏥 记录生病', `
+    <div class="fg"><label class="fl">日期</label><input class="fi" type="date" id="ill-date" value="${todayStr()}"></div>
+    <div class="fg"><label class="fl">症状</label><textarea class="fta" id="ill-sym" placeholder="如：拉肚子、呕吐..."></textarea></div>
+    <div class="fg"><label class="fl">用药</label><input class="fi" id="ill-med" placeholder="如：益生菌、蒙脱石散"></div>
+    <div class="fg"><label class="fl">花费(元)</label><input class="fi" type="number" id="ill-cost" placeholder="如：200"></div>
+    <button class="btn btn-p btn-blk mt8" onclick="addIllness()">🏥 保存</button>
+  `);
+}
+
+function addIllness() {
+  const dog = dogs[currentDog];
+  const sym = document.getElementById('ill-sym').value;
+  if (!sym) return;
+  illnesses.push({
+    id: Date.now().toString(),
+    dogId: dog.id,
+    date: document.getElementById('ill-date').value,
+    symptoms: sym,
+    medicine: document.getElementById('ill-med').value,
+    cost: document.getElementById('ill-cost').value
+  });
+  save();
+  closeModal();
+  renderHealth();
+}
+
+function deleteIllness(id) {
+  illnesses = illnesses.filter(i => i.id !== id);
+  save();
+  renderHealth();
+}
+
+// ==================== FOOD MODULE ====================
+let foodCategory = '全部';
+let expandedFood = null;
+
+function renderFoodPage() {
+  // Danger foods
+  const dangers = FOODS.filter(f => f.safety === 'toxic');
+  document.getElementById('danger-list').innerHTML = dangers.slice(0, 8).map(f =>
+    `<span class="badge b-toxic" style="margin:2px">${f.icon} ${f.name}</span>`
+  ).join('');
+
+  // Category tabs
+  const cats = ['全部', '⭐收藏', '水果', '蔬菜', '肉类', '零食', '人类食品'];
+  document.getElementById('food-cats').innerHTML = cats.map(c =>
+    `<button class="tb ${foodCategory === c ? 'active' : ''}" onclick="foodCategory='${c}';filterFoods()">${c}</button>`
+  ).join('');
+
+  filterFoods();
+}
+
+function filterFoods() {
+  const q = (document.getElementById('food-search')?.value || '').toLowerCase();
+  let list = FOODS;
+
+  if (foodCategory === '⭐收藏') {
+    list = list.filter(f => favFoods.includes(f.name));
+  } else if (foodCategory !== '全部') {
+    list = list.filter(f => f.cat === foodCategory);
+  }
+  if (q) list = list.filter(f => f.name.toLowerCase().includes(q) || f.cat.includes(q));
+
+  // Sort: toxic first
+  list.sort((a, b) => {
+    const order = { toxic: 0, caution: 1, safe: 2 };
+    return order[a.safety] - order[b.safety];
+  });
+
+  if (list.length === 0) {
+    document.getElementById('food-list').innerHTML = '<div class="empty-s"><div style="font-size:48px;margin-bottom:8px">🔍</div><p>没有找到相关食物</p></div>';
+    return;
+  }
+
+  document.getElementById('food-list').innerHTML = list.map(f => {
+    const safetyMap = { safe: { badge: 'b-safe', label: '✅ 安全', icon: '✅' }, caution: { badge: 'b-warn', label: '⚠️ 少量', icon: '⚠️' }, toxic: { badge: 'b-toxic', label: '☠️ 有毒', icon: '☠️' } };
+    const s = safetyMap[f.safety];
+    const isFav = favFoods.includes(f.name);
+    const isExpanded = expandedFood === f.name;
+    return `<div class="food-i" onclick="toggleFoodDetail('${f.name}')">
+      <div class="food-ic">${f.icon}</div>
+      <div class="food-inf">
+        <div class="food-n">${f.name} <span class="badge ${s.badge}">${s.label}</span></div>
+        <div class="food-nt">${f.cat}</div>
+        ${isExpanded ? `<div class="food-detail">
+          <div>📝 ${f.note}</div>
+          ${f.dose ? `<div style="margin-top:4px">📏 建议用量: ${f.dose}</div>` : ''}
+        </div>` : ''}
+      </div>
+      <button class="food-fav" onclick="event.stopPropagation();toggleFav('${f.name}')">${isFav ? '⭐' : '☆'}</button>
+    </div>`;
+  }).join('');
+}
+
+function toggleFoodDetail(name) {
+  expandedFood = expandedFood === name ? null : name;
+  filterFoods();
+}
+
+function toggleFav(name) {
+  if (favFoods.includes(name)) favFoods = favFoods.filter(f => f !== name);
+  else favFoods.push(name);
+  save();
+  filterFoods();
+}
+
+// ==================== WALK MODULE ====================
+function renderWalk() {
+  renderWeather();
+  renderWalkToggles();
+  renderDuty();
+  renderWeekStats();
+  renderWalkLogs();
+  // Restore timer if running
+  const saved = LS.get('timerState', null);
+  if (saved && saved.running) {
+    timerRunning = true;
+    timerStart = saved.start;
+    currentWalkWho = saved.who;
+    currentWalkDog = saved.dog;
+    currentPoops = saved.poops || [];
+    document.getElementById('btn-start').textContent = '⏹️ 结束遛狗';
+    document.getElementById('btn-start').classList.remove('btn-p');
+    document.getElementById('btn-start').classList.add('btn-d');
+    document.getElementById('poop-card').style.display = '';
+    startTimerTick();
+    renderPoops();
+    // Highlight active toggles
+    setTimeout(() => {
+      document.querySelectorAll('#walk-who .tb').forEach(b => b.classList.toggle('active', b.textContent === currentWalkWho));
+      document.querySelectorAll('#walk-dog .tb').forEach(b => b.classList.toggle('active', b.textContent === currentWalkDog));
+    }, 50);
+  }
+}
+
+function renderWalkToggles() {
+  // Who's walking
+  const members = dutyMembers;
+  document.getElementById('walk-who').innerHTML = members.map(m =>
+    `<button class="tb ${currentWalkWho === m ? 'active' : ''}" onclick="selectWalkWho(this,'${m}')">${m}</button>`
+  ).join('');
+
+  // Which dog
+  const dogOpts = [...dogs.map(d => d.name || '未命名'), '一起'];
+  document.getElementById('walk-dog').innerHTML = dogOpts.map(d =>
+    `<button class="tb ${currentWalkDog === d ? 'active' : ''}" onclick="selectWalkDog(this,'${d}')">${d}</button>`
+  ).join('');
+}
+
+function selectWalkWho(el, name) {
+  document.querySelectorAll('#walk-who .tb').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentWalkWho = name;
+}
+
+function selectWalkDog(el, name) {
+  document.querySelectorAll('#walk-dog .tb').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentWalkDog = name;
+}
+
+function toggleTimer() {
+  if (!timerRunning) {
+    if (!currentWalkWho) { alert('请选择谁来遛'); return; }
+    if (!currentWalkDog) { alert('请选择遛哪只狗'); return; }
+    timerRunning = true;
+    timerStart = Date.now();
+    currentPoops = [];
+    document.getElementById('btn-start').textContent = '⏹️ 结束遛狗';
+    document.getElementById('btn-start').classList.remove('btn-p');
+    document.getElementById('btn-start').classList.add('btn-d');
+    document.getElementById('poop-card').style.display = '';
+    LS.set('timerState', { running: true, start: timerStart, who: currentWalkWho, dog: currentWalkDog, poops: [] });
+    startTimerTick();
+  } else {
+    const duration = Math.floor((Date.now() - timerStart) / 1000);
+    timerRunning = false;
+    clearInterval(timerInterval);
+    walkLogs.push({
+      id: Date.now().toString(),
+      date: todayStr(),
+      walker: currentWalkWho,
+      dogName: currentWalkDog,
+      duration: duration,
+      startTime: new Date(timerStart).toTimeString().slice(0, 5),
+      endTime: new Date().toTimeString().slice(0, 5)
+    });
+    // Save poop logs
+    currentPoops.forEach(p => {
+      poopLogs.push({ ...p, walkId: walkLogs[walkLogs.length - 1].id });
+    });
+    save();
+    document.getElementById('timer').textContent = '00:00:00';
+    document.getElementById('btn-start').textContent = '🐾 开始遛狗';
+    document.getElementById('btn-start').classList.add('btn-p');
+    document.getElementById('btn-start').classList.remove('btn-d');
+    document.getElementById('poop-card').style.display = 'none';
+    currentPoops = [];
+    LS.set('timerState', null);
+    renderWalk();
+  }
+}
+
+function startTimerTick() {
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+    document.getElementById('timer').textContent = formatDuration(elapsed);
+  }, 1000);
+}
+
+function formatDuration(secs) {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+}
+
+function addPoop(status) {
+  const now = new Date().toTimeString().slice(0, 5);
+  currentPoops.push({ time: now, status: status, dog: currentWalkDog });
+  const saved = LS.get('timerState', {});
+  saved.poops = currentPoops;
+  LS.set('timerState', saved);
+  renderPoops();
+}
+
+function renderPoops() {
+  if (!currentPoops.length) {
+    document.getElementById('poop-recs').innerHTML = '<div class="tsm tmut tc">暂无记录</div>';
+    return;
+  }
+  const clsMap = { '正常': 'poop-n', '偏软': 'poop-s', '异常': 'poop-a' };
+  document.getElementById('poop-recs').innerHTML = currentPoops.map(p =>
+    `<div style="margin-bottom:4px"><span class="tsm tmut">${p.time}</span> <span class="poop-t ${clsMap[p.status]}">${p.status}</span></div>`
+  ).join('');
+}
+
+// ==================== DUTY ====================
+function getTodayDuty() {
+  if (dutyMembers.length === 0) return '未设置';
+  const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+  return dutyMembers[dayOfYear % dutyMembers.length];
+}
+
+function renderDuty() {
+  document.getElementById('duty-today').textContent = getTodayDuty();
+}
+
+function showDutyModal() {
+  openModal('👨‍👩‍👧‍👦 设置轮值成员', `
+    <div class="fg"><label class="fl">轮值成员（逗号分隔）</label>
+      <input class="fi" id="duty-input" value="${dutyMembers.join(', ')}" placeholder="如：爸爸, 妈妈, 姐姐">
+    </div>
+    <div class="tsm tmut mb8">按照顺序每天轮流，自动循环</div>
+    <button class="btn btn-p btn-blk" onclick="saveDuty()">保存</button>
+  `);
+}
+
+function saveDuty() {
+  const val = document.getElementById('duty-input').value;
+  dutyMembers = val.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+  save();
+  closeModal();
+  renderWalk();
+}
+
+// ==================== WEEK STATS ====================
+function renderWeekStats() {
+  const today = new Date();
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay());
+  const weekDates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    weekDates.push(d.toISOString().slice(0, 10));
+  }
+  const weekLogs = walkLogs.filter(w => weekDates.includes(w.date));
+
+  let html = '';
+  dogs.forEach(dog => {
+    const dogLogs = weekLogs.filter(w => w.dogName === dog.name || w.dogName === '一起');
+    const count = dogLogs.length;
+    const totalSecs = dogLogs.reduce((s, w) => s + (w.duration || 0), 0);
+    html += `<div class="stats-c">
+      <div style="font-size:24px;margin-bottom:4px">${dog.avatar}</div>
+      <div style="font-weight:700">${dog.name || '未命名'}</div>
+      <div class="tsm tmut">本周 ${count} 次</div>
+      <div class="tsm" style="color:var(--pri)">${formatDuration(totalSecs)}</div>
+    </div>`;
+  });
+  document.getElementById('week-stats').innerHTML = html;
+}
+
+// ==================== WALK LOGS ====================
+function renderWalkLogs() {
+  const recent = [...walkLogs].sort((a,b) => {
+    if (a.date !== b.date) return b.date.localeCompare(a.date);
+    return (b.startTime || '').localeCompare(a.startTime || '');
+  }).slice(0, 20);
+
+  if (recent.length === 0) {
+    document.getElementById('walk-logs').innerHTML = `<div class="empty-s">
+      <svg width="120" height="100" viewBox="0 0 120 100" style="display:block;margin:0 auto 12px">
+        <ellipse cx="60" cy="85" rx="40" ry="8" fill="#F0E6DE"/>
+        <circle cx="50" cy="45" r="20" fill="#FFD5CD"/>
+        <circle cx="70" cy="42" r="16" fill="#FFD5CD"/>
+        <circle cx="40" cy="30" r="8" fill="#FFD5CD"/>
+        <circle cx="78" cy="28" r="7" fill="#FFD5CD"/>
+        <circle cx="46" cy="50" r="3" fill="#2D3436"/>
+        <circle cx="62" cy="48" r="3" fill="#2D3436"/>
+        <ellipse cx="54" cy="54" rx="4" ry="3" fill="#FF6B6B"/>
+        <path d="M38 70 Q40 80 42 85" stroke="#FFD5CD" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <path d="M72 68 Q74 78 76 85" stroke="#FFD5CD" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <path d="M80 55 Q95 50 90 60" stroke="#FFD5CD" stroke-width="4" fill="none" stroke-linecap="round"/>
+      </svg>
+      <p>还没有遛狗记录哦，快去遛狗吧！🐾</p>
+    </div>`;
+    return;
+  }
+
+  document.getElementById('walk-logs').innerHTML = recent.map(w => {
+    const wPoops = poopLogs.filter(p => p.walkId === w.id);
+    const clsMap = { '正常': 'poop-n', '偏软': 'poop-s', '异常': 'poop-a' };
+    return `<div class="walk-i">
+      <div class="fb"><div><span style="font-weight:600">${w.dogName}</span> <span class="badge b-sec">${w.walker}</span></div>
+        <button class="del-b" onclick="deleteWalk('${w.id}')">🗑️</button></div>
+      <div class="tsm tmut">${w.date} ${w.startTime || ''} - ${w.endTime || ''} · ${formatDuration(w.duration)}</div>
+      ${wPoops.length ? `<div class="mt8">${wPoops.map(p => `<span class="poop-t ${clsMap[p.status]}" style="margin-right:4px">${p.time} ${p.status}</span>`).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function deleteWalk(id) {
+  walkLogs = walkLogs.filter(w => w.id !== id);
+  poopLogs = poopLogs.filter(p => p.walkId !== id);
+  save();
+  renderWalk();
+}
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', () => {
+  fetchWeather();
+  renderDashboard();
+  // Refresh weather every 30 min
+  setInterval(fetchWeather, 30 * 60 * 1000);
+});
+</script>
+</body>
+</html>
