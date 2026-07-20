@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#FF6B6B">
-<title>🐾 双狗管家</title>
+<title>🐾 咖咖与夏夏专属管家</title>
 <style>
 :root{--bg:#FFF8F0;--card:#fff;--pri:#FF6B6B;--pri-l:#FF8E8E;--pri-d:#E55A5A;--sec:#4ECDC4;--txt:#2D3436;--txt-l:#636E72;--txt-m:#B2BEC3;--bdr:#F0E6DE;--shd:0 2px 12px rgba(0,0,0,.08);--dng:#E74C3C;--wrn:#F39C12;--suc:#27AE60;--rad:16px;--rad-s:10px;--tab-h:64px}
 @media(prefers-color-scheme:dark){:root{--bg:#1A1A2E;--card:#222244;--txt:#EAEAEA;--txt-l:#B0B0C0;--txt-m:#666680;--bdr:#333355;--shd:0 2px 12px rgba(0,0,0,.3)}}
@@ -79,10 +79,32 @@ body{font-family:-apple-system,'PingFang SC','Hiragino Sans GB',system-ui,sans-s
 .mt8{margin-top:8px}.mb8{margin-bottom:8px}.mb4{margin-bottom:4px}.tsm{font-size:12px}.tmut{color:var(--txt-m)}.tc{text-align:center}
 .mini-chart{height:40px;margin-top:4px}
 .food-detail{padding:12px;background:rgba(78,205,196,.06);border-radius:var(--rad-s);margin-top:8px;font-size:13px;color:var(--txt-l)}
+.av-opts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.av-o{width:44px;height:44px;border-radius:50%;border:2px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:.15s}
+.av-o.selected{border-color:var(--pri);background:rgba(255,107,107,.1);transform:scale(1.1)}
+.av-o:active{transform:scale(.95)}
+.duty-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.duty-tbl th,.duty-tbl td{border:1px solid var(--bdr);padding:6px 4px;text-align:center;vertical-align:middle}
+.duty-tbl th{background:rgba(255,107,107,.08);font-weight:600;font-size:11px}
+.duty-tbl td{cursor:pointer;min-height:32px;transition:background .15s}
+.duty-tbl td:hover{background:rgba(78,205,196,.1)}
+.duty-tbl .duty-cell-tag{display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;background:rgba(78,205,196,.15);color:var(--sec);margin:1px;font-weight:600}
+.stat-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.stat-nav-btn{background:none;border:none;font-size:18px;cursor:pointer;color:var(--txt-l);padding:4px 8px;border-radius:var(--rad-s)}
+.stat-nav-btn:active{background:rgba(0,0,0,.05)}
+.stat-period{display:flex;gap:4px}
+.stat-period .tb{padding:4px 10px;font-size:11px}
+.stat-card{background:var(--card);border-radius:var(--rad-s);padding:14px;border:1px solid var(--bdr);margin-bottom:10px}
+.stat-card-title{font-weight:700;font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px;border-bottom:1px solid rgba(0,0,0,.04)}
+.stat-row:last-child{border-bottom:none}
+.stat-total{border-top:1.5px solid var(--bdr);margin-top:6px;padding-top:6px;font-weight:700;font-size:13px;display:flex;justify-content:space-between}
+.pee-poop-summary{display:flex;gap:12px;justify-content:center;margin-bottom:8px;font-size:13px;color:var(--txt-l)}
+.pee-poop-summary span{font-weight:600}
 </style>
 </head>
 <body>
-<div class="hdr"><h1>🐾 双狗管家</h1><small>两只毛孩子的贴心助手</small></div>
+<div class="hdr"><h1>🐾 咖咖与夏夏专属管家</h1><small>两只毛孩子的贴心助手</small></div>
 
 <div class="page active" id="pg-dash">
   <div id="weather-box"></div>
@@ -115,16 +137,31 @@ body{font-family:-apple-system,'PingFang SC','Hiragino Sans GB',system-ui,sans-s
     <div class="timer-c"><button class="btn btn-p" id="btn-start" onclick="toggleTimer()">🐾 开始遛狗</button></div>
   </div>
   <div class="card" id="poop-card" style="display:none"><div class="ct">💩 大小便记录</div>
-    <div class="tg" style="justify-content:center;margin-bottom:10px">
-      <button class="tb" onclick="addPoop('正常')">✅ 正常</button>
-      <button class="tb" onclick="addPoop('偏软')">⚠️ 偏软</button>
-      <button class="tb" onclick="addPoop('异常')">❌ 异常</button>
-    </div><div id="poop-recs"></div>
+    <div class="pee-poop-summary" id="pee-poop-summary"></div>
+    <div style="margin-bottom:8px"><div class="fl" style="text-align:center;margin-bottom:4px">💧 小便</div>
+      <div class="tg" style="justify-content:center;margin-bottom:6px">
+        <button class="tb" onclick="addPee()">💧 记录小便</button>
+      </div>
+    </div>
+    <div style="margin-bottom:8px"><div class="fl" style="text-align:center;margin-bottom:4px">💩 大便</div>
+      <div class="tg" style="justify-content:center;margin-bottom:6px">
+        <button class="tb" onclick="addPoop('正常')">✅ 正常</button>
+        <button class="tb" onclick="addPoop('偏软')">⚠️ 偏软</button>
+        <button class="tb" onclick="addPoop('异常')">❌ 异常</button>
+      </div>
+    </div>
+    <div id="poop-recs"></div>
   </div>
   <div class="card"><div class="sh"><div class="ct">👨‍👩‍👧‍👦 遛狗轮值</div><button class="btn btn-sm btn-o" onclick="showModal('duty')">设置</button></div>
-    <div class="duty-c"><div class="tsm tmut mb8">今天该谁遛？</div><div class="duty-p" id="duty-today"></div></div>
+    <div class="duty-c"><div class="tsm tmut mb8">今日轮值</div><div class="duty-p" id="duty-today"></div></div>
   </div>
-  <div class="card"><div class="ct">📊 本周统计</div><div class="stats-g" id="week-stats"></div></div>
+  <div class="card"><div class="ct">📊 统计</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:6px">
+      <div class="stat-period" id="stat-period-tabs"></div>
+    </div>
+    <div class="stat-nav" id="stat-nav"></div>
+    <div id="walk-stats-content"></div>
+  </div>
   <div class="card"><div class="ct">📋 遛狗日志</div><div id="walk-logs"></div></div>
 </div>
 
@@ -418,8 +455,8 @@ function renderDashboard() {
   });
 
   // Today duty
-  const duty = getTodayDuty();
-  document.getElementById('today-duty').innerHTML = `<div style="font-size:14px;margin-bottom:8px">🧑 今日轮值: <strong style="color:var(--sec)">${duty}</strong></div>`;
+  const dutyInfo = getTodayDutyInfo();
+  document.getElementById('today-duty').innerHTML = `<div style="font-size:14px;margin-bottom:8px">🧑 今日上午: <strong style="color:var(--sec)">${dutyInfo.am}</strong> / 今日下午: <strong style="color:var(--sec)">${dutyInfo.pm}</strong></div>`;
 
   // Today walks
   const todayLogs = walkLogs.filter(w => w.date === todayStr());
@@ -453,6 +490,37 @@ function renderAlerts() {
       alerts.push({ urgent: false, text: `📅 ${dogName} 的${v.type}将在 ${diff} 天后到期` });
     }
   });
+
+  // Duty deviation alerts
+  const dutySchedule = LS.get('dutySchedule', null);
+  if (dutySchedule && dutySchedule.schedule) {
+    const now = new Date();
+    const isAm = now.getHours() < 12;
+    const period = isAm ? 'am' : 'pm';
+    const periodLabel = isAm ? '上午' : '下午';
+    const dow = now.getDay() === 0 ? 7 : now.getDay();
+    const key = dow + '_' + period;
+    const scheduled = dutySchedule.schedule[key] || [];
+    if (scheduled.length > 0) {
+      const todayLogs = walkLogs.filter(w => w.date === todayStr());
+      // Filter logs for current period
+      const periodLogs = todayLogs.filter(w => {
+        const h = parseInt((w.startTime || '00:00').split(':')[0]);
+        return isAm ? h < 12 : h >= 12;
+      });
+      const actualWalkers = [...new Set(periodLogs.map(w => w.walker))];
+      const scheduledStr = scheduled.join('、');
+      if (periodLogs.length === 0) {
+        alerts.push({ urgent: true, text: `⏰ 今日${periodLabel}轮值：${scheduledStr}，还未遯狗` });
+      } else {
+        const mismatch = actualWalkers.some(w => !scheduled.includes(w)) || scheduled.some(s => !actualWalkers.includes(s));
+        if (mismatch) {
+          alerts.push({ urgent: false, text: `⚠️ 今日${periodLabel}轮值：${scheduledStr}，实际遯狗：${actualWalkers.join('、')}` });
+        }
+      }
+    }
+  }
+
   if (alerts.length === 0) {
     document.getElementById('alert-list').innerHTML = '<div class="empty-s"><div style="font-size:48px;margin-bottom:8px">😊</div><p>暂无提醒，一切安好！</p></div>';
   } else {
@@ -936,7 +1004,7 @@ function renderWalk() {
   renderWeather();
   renderWalkToggles();
   renderDuty();
-  renderWeekStats();
+  renderWalkStats();
   renderWalkLogs();
   // Restore timer if running
   const saved = LS.get('timerState', null);
@@ -1042,9 +1110,18 @@ function formatDuration(secs) {
   return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
 }
 
+function addPee() {
+  const now = new Date().toTimeString().slice(0, 5);
+  currentPoops.push({ time: now, type: 'pee', dog: currentWalkDog });
+  const saved = LS.get('timerState', {});
+  saved.poops = currentPoops;
+  LS.set('timerState', saved);
+  renderPoops();
+}
+
 function addPoop(status) {
   const now = new Date().toTimeString().slice(0, 5);
-  currentPoops.push({ time: now, status: status, dog: currentWalkDog });
+  currentPoops.push({ time: now, type: 'poop', status: status, dog: currentWalkDog });
   const saved = LS.get('timerState', {});
   saved.poops = currentPoops;
   LS.set('timerState', saved);
@@ -1052,71 +1129,257 @@ function addPoop(status) {
 }
 
 function renderPoops() {
+  // Summary
+  const peeCount = currentPoops.filter(p => p.type === 'pee').length;
+  const poopCount = currentPoops.filter(p => p.type === 'poop').length;
+  const summaryEl = document.getElementById('pee-poop-summary');
+  if (summaryEl) {
+    if (currentPoops.length > 0) {
+      const poopDetails = [];
+      const normal = currentPoops.filter(p => p.type === 'poop' && p.status === '正常').length;
+      const soft = currentPoops.filter(p => p.type === 'poop' && p.status === '偏软').length;
+      const abnormal = currentPoops.filter(p => p.type === 'poop' && p.status === '异常').length;
+      if (normal) poopDetails.push('正常' + normal);
+      if (soft) poopDetails.push('偏软' + soft);
+      if (abnormal) poopDetails.push('异常' + abnormal);
+      summaryEl.innerHTML = `<span>💧 小便 ${peeCount} 次</span><span>💩 大便 ${poopCount} 次${poopDetails.length ? '(' + poopDetails.join('/') + ')' : ''}</span>`;
+    } else {
+      summaryEl.innerHTML = '';
+    }
+  }
   if (!currentPoops.length) {
     document.getElementById('poop-recs').innerHTML = '<div class="tsm tmut tc">暂无记录</div>';
     return;
   }
   const clsMap = { '正常': 'poop-n', '偏软': 'poop-s', '异常': 'poop-a' };
-  document.getElementById('poop-recs').innerHTML = currentPoops.map(p =>
-    `<div style="margin-bottom:4px"><span class="tsm tmut">${p.time}</span> <span class="poop-t ${clsMap[p.status]}">${p.status}</span></div>`
-  ).join('');
+  document.getElementById('poop-recs').innerHTML = [...currentPoops].reverse().map(p => {
+    if (p.type === 'pee') {
+      return `<div style="margin-bottom:4px"><span class="tsm tmut">${p.time}</span> <span class="poop-t" style="background:#E3F2FD;color:#1976D2">💧 小便</span></div>`;
+    }
+    return `<div style="margin-bottom:4px"><span class="tsm tmut">${p.time}</span> <span class="poop-t ${clsMap[p.status]}">💩 ${p.status}</span></div>`;
+  }).join('');
 }
 
 // ==================== DUTY ====================
-function getTodayDuty() {
-  if (dutyMembers.length === 0) return '未设置';
-  const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-  return dutyMembers[dayOfYear % dutyMembers.length];
+function getDutySchedule() {
+  return LS.get('dutySchedule', { members: dutyMembers, schedule: {} });
+}
+
+function getTodayDutyInfo() {
+  const ds = getDutySchedule();
+  const now = new Date();
+  const dow = now.getDay() === 0 ? 7 : now.getDay();
+  const amKey = dow + '_am';
+  const pmKey = dow + '_pm';
+  const am = (ds.schedule[amKey] || []).join('、') || '未排班';
+  const pm = (ds.schedule[pmKey] || []).join('、') || '未排班';
+  return { am, pm };
+}
+
+function getCurrentDuty() {
+  const ds = getDutySchedule();
+  const now = new Date();
+  const dow = now.getDay() === 0 ? 7 : now.getDay();
+  const period = now.getHours() < 12 ? 'am' : 'pm';
+  const key = dow + '_' + period;
+  return (ds.schedule[key] || []).join('、') || '未排班';
 }
 
 function renderDuty() {
-  document.getElementById('duty-today').textContent = getTodayDuty();
+  const info = getTodayDutyInfo();
+  const now = new Date();
+  const isAm = now.getHours() < 12;
+  document.getElementById('duty-today').innerHTML = `<div>上午：${info.am}</div><div>下午：${info.pm}</div><div class="tsm tmut" style="margin-top:4px">当前时段: ${isAm ? '上午' : '下午'} → ${isAm ? info.am : info.pm}</div>`;
 }
 
 function showDutyModal() {
-  openModal('👨‍👩‍👧‍👦 设置轮值成员', `
+  const ds = getDutySchedule();
+  const members = ds.members || dutyMembers;
+  const dayNames = ['周一','周二','周三','周四','周五','周六','周日'];
+
+  let tableHtml = '<table class="duty-tbl"><thead><tr><th></th>';
+  dayNames.forEach(d => { tableHtml += `<th>${d}</th>`; });
+  tableHtml += '</tr></thead><tbody>';
+  ['am','pm'].forEach(period => {
+    const label = period === 'am' ? '上午' : '下午';
+    tableHtml += `<tr><th>${label}</th>`;
+    for (let d = 1; d <= 7; d++) {
+      const key = d + '_' + period;
+      const assigned = ds.schedule[key] || [];
+      const tags = assigned.map(a => `<span class="duty-cell-tag">${a}</span>`).join('');
+      tableHtml += `<td onclick="editDutyCell('${key}')" id="duty-cell-${key}">${tags || '<span class="tsm tmut">+</span>'}</td>`;
+    }
+    tableHtml += '</tr>';
+  });
+  tableHtml += '</tbody></table>';
+
+  openModal('👨‍👩‍👧‍👦 排班设置', `
     <div class="fg"><label class="fl">轮值成员（逗号分隔）</label>
-      <input class="fi" id="duty-input" value="${dutyMembers.join(', ')}" placeholder="如：爸爸, 妈妈, 姐姐">
+      <input class="fi" id="duty-input" value="${members.join(', ')}" placeholder="如：爸爸, 妈妈, 姐姐" onchange="updateDutyMembers()">
     </div>
-    <div class="tsm tmut mb8">按照顺序每天轮流，自动循环</div>
-    <button class="btn btn-p btn-blk" onclick="saveDuty()">保存</button>
+    <div class="tsm tmut mb8">点击表格单元格选择该时段的轮值人</div>
+    ${tableHtml}
+    <button class="btn btn-p btn-blk mt8" onclick="saveDutySchedule()">保存排班</button>
   `);
 }
 
-function saveDuty() {
+function updateDutyMembers() {
   const val = document.getElementById('duty-input').value;
-  dutyMembers = val.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+  const newMembers = val.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+  const ds = getDutySchedule();
+  ds.members = newMembers;
+  // Clean up schedule entries that reference removed members
+  Object.keys(ds.schedule).forEach(key => {
+    ds.schedule[key] = ds.schedule[key].filter(m => newMembers.includes(m));
+  });
+  LS.set('dutySchedule', ds);
+  // Re-render modal
+  showDutyModal();
+}
+
+function editDutyCell(cellKey) {
+  const ds = getDutySchedule();
+  const members = ds.members || dutyMembers;
+  const assigned = ds.schedule[cellKey] || [];
+  const dayNames = ['周一','周二','周三','周四','周五','周六','周日'];
+  const parts = cellKey.split('_');
+  const dayIdx = parseInt(parts[0]) - 1;
+  const periodLabel = parts[1] === 'am' ? '上午' : '下午';
+  const label = dayNames[dayIdx] + ' ' + periodLabel;
+
+  const checkboxes = members.map(m => {
+    const checked = assigned.includes(m) ? 'checked' : '';
+    return `<label style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:var(--rad-s);cursor:pointer;border:1px solid var(--bdr);margin-bottom:4px">
+      <input type="checkbox" value="${m}" ${checked} style="width:18px;height:18px"> <span style="font-size:14px">${m}</span></label>`;
+  }).join('');
+
+  // Use a sub-modal approach: replace modal content
+  const modalC = document.querySelector('.modal-c');
+  if (modalC) {
+    modalC.innerHTML = `
+      <div class="modal-h"><h3>选择值班人 - ${label}</h3><button class="modal-x" onclick="showDutyModal()">←</button></div>
+      <div id="duty-cell-checks">${checkboxes}</div>
+      <button class="btn btn-p btn-blk mt8" onclick="saveDutyCell('${cellKey}')">确定</button>
+    `;
+  }
+}
+
+function saveDutyCell(cellKey) {
+  const checks = document.querySelectorAll('#duty-cell-checks input[type=checkbox]');
+  const selected = [];
+  checks.forEach(c => { if (c.checked) selected.push(c.value); });
+  const ds = getDutySchedule();
+  ds.schedule[cellKey] = selected;
+  LS.set('dutySchedule', ds);
+  showDutyModal();
+}
+
+function saveDutySchedule() {
+  const val = document.getElementById('duty-input').value;
+  const newMembers = val.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+  dutyMembers = newMembers;
+  const ds = getDutySchedule();
+  ds.members = newMembers;
+  LS.set('dutySchedule', ds);
   save();
   closeModal();
   renderWalk();
+  renderDashboard();
 }
 
-// ==================== WEEK STATS ====================
-function renderWeekStats() {
-  const today = new Date();
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay());
-  const weekDates = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(weekStart);
-    d.setDate(weekStart.getDate() + i);
-    weekDates.push(d.toISOString().slice(0, 10));
-  }
-  const weekLogs = walkLogs.filter(w => weekDates.includes(w.date));
+// ==================== ENHANCED STATS ====================
+let statPeriod = 'week'; // 'day', 'week', 'month'
+let statOffset = 0; // 0 = current, -1 = previous, etc.
+
+function renderWalkStats() {
+  // Period tabs
+  const periods = [{k:'day',l:'日'},{k:'week',l:'周'},{k:'month',l:'月'}];
+  document.getElementById('stat-period-tabs').innerHTML = periods.map(p =>
+    `<button class="tb ${statPeriod===p.k?'active':''}" onclick="statPeriod='${p.k}';statOffset=0;renderWalkStats()">${p.l}</button>`
+  ).join('');
+
+  // Calculate date range
+  const {start, end, label} = getStatRange(statPeriod, statOffset);
+  const startStr = start.toISOString().slice(0,10);
+  const endStr = end.toISOString().slice(0,10);
+
+  // Nav
+  document.getElementById('stat-nav').innerHTML = `
+    <button class="stat-nav-btn" onclick="statOffset--;renderWalkStats()">◀</button>
+    <span class="tsm" style="font-weight:600">${label}</span>
+    <button class="stat-nav-btn" onclick="if(statOffset<0){statOffset++;renderWalkStats()}"${statOffset>=0?' disabled style="opacity:.3"':''}>▶</button>
+  `;
+
+  // Filter logs in range
+  const rangeLogs = walkLogs.filter(w => w.date >= startStr && w.date <= endStr);
 
   let html = '';
   dogs.forEach(dog => {
-    const dogLogs = weekLogs.filter(w => w.dogName === dog.name || w.dogName === '一起');
-    const count = dogLogs.length;
-    const totalSecs = dogLogs.reduce((s, w) => s + (w.duration || 0), 0);
-    html += `<div class="stats-c">
-      <div style="font-size:24px;margin-bottom:4px">${dog.avatar}</div>
-      <div style="font-weight:700">${dog.name || '未命名'}</div>
-      <div class="tsm tmut">本周 ${count} 次</div>
-      <div class="tsm" style="color:var(--pri)">${formatDuration(totalSecs)}</div>
+    const dogLogs = rangeLogs.filter(w => w.dogName === dog.name || w.dogName === '一起');
+    if (dogLogs.length === 0 && rangeLogs.length === 0) {
+      html += `<div class="stat-card"><div class="stat-card-title">${dog.avatar} ${dog.name || '未命名'}</div><div class="tsm tmut">暂无记录</div></div>`;
+      return;
+    }
+    // Group by walker
+    const walkerMap = {};
+    dogLogs.forEach(w => {
+      if (!walkerMap[w.walker]) walkerMap[w.walker] = { count: 0, duration: 0 };
+      walkerMap[w.walker].count++;
+      walkerMap[w.walker].duration += (w.duration || 0);
+    });
+    const totalCount = dogLogs.length;
+    const totalDuration = dogLogs.reduce((s, w) => s + (w.duration || 0), 0);
+
+    let rows = '';
+    Object.keys(walkerMap).forEach(walker => {
+      const wk = walkerMap[walker];
+      rows += `<div class="stat-row"><span>👤 ${walker}</span><span>${wk.count}次 / ${formatFriendlyDuration(wk.duration)}</span></div>`;
+    });
+
+    html += `<div class="stat-card">
+      <div class="stat-card-title">📊 ${dog.avatar} ${dog.name || '未命名'}</div>
+      ${rows}
+      <div class="stat-total"><span>总计</span><span>${totalCount}次 / ${formatFriendlyDuration(totalDuration)}</span></div>
     </div>`;
   });
-  document.getElementById('week-stats').innerHTML = html;
+  document.getElementById('walk-stats-content').innerHTML = html || '<div class="tsm tmut tc">暂无统计数据</div>';
+}
+
+function getStatRange(period, offset) {
+  const now = new Date();
+  let start, end, label;
+  if (period === 'day') {
+    const d = new Date(now);
+    d.setDate(d.getDate() + offset);
+    start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    end = new Date(start);
+    label = start.toISOString().slice(0,10);
+  } else if (period === 'week') {
+    const d = new Date(now);
+    // Monday-based week
+    const currentDay = d.getDay() === 0 ? 7 : d.getDay();
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - currentDay + 1 + offset * 7);
+    start = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate());
+    end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    label = `${start.getMonth()+1}.${start.getDate()} - ${end.getMonth()+1}.${end.getDate()}`;
+  } else {
+    // month
+    const m = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    start = new Date(m.getFullYear(), m.getMonth(), 1);
+    end = new Date(m.getFullYear(), m.getMonth() + 1, 0);
+    label = `${start.getFullYear()}年${start.getMonth()+1}月`;
+  }
+  return { start, end, label };
+}
+
+function formatFriendlyDuration(secs) {
+  if (secs < 60) return secs + '秒';
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  if (h > 0) return h + '小时' + (m > 0 ? m + '分' : '');
+  return m + '分';
 }
 
 // ==================== WALK LOGS ====================
@@ -1148,12 +1411,25 @@ function renderWalkLogs() {
 
   document.getElementById('walk-logs').innerHTML = recent.map(w => {
     const wPoops = poopLogs.filter(p => p.walkId === w.id);
+    const peeCount = wPoops.filter(p => p.type === 'pee').length;
+    const poopItems = wPoops.filter(p => p.type === 'poop' || (!p.type && p.status));
+    const poopCount = poopItems.length;
     const clsMap = { '正常': 'poop-n', '偏软': 'poop-s', '异常': 'poop-a' };
+    let excretionSummary = '';
+    if (peeCount > 0 || poopCount > 0) {
+      const parts = [];
+      if (peeCount > 0) parts.push(`💧小便${peeCount}次`);
+      if (poopCount > 0) {
+        const details = poopItems.map(p => p.status).join('/');
+        parts.push(`💩大便${poopCount}次(${details})`);
+      }
+      excretionSummary = `<div class="tsm" style="margin-top:4px">${parts.join(' ')}</div>`;
+    }
     return `<div class="walk-i">
       <div class="fb"><div><span style="font-weight:600">${w.dogName}</span> <span class="badge b-sec">${w.walker}</span></div>
         <button class="del-b" onclick="deleteWalk('${w.id}')">🗑️</button></div>
       <div class="tsm tmut">${w.date} ${w.startTime || ''} - ${w.endTime || ''} · ${formatDuration(w.duration)}</div>
-      ${wPoops.length ? `<div class="mt8">${wPoops.map(p => `<span class="poop-t ${clsMap[p.status]}" style="margin-right:4px">${p.time} ${p.status}</span>`).join('')}</div>` : ''}
+      ${excretionSummary}
     </div>`;
   }).join('');
 }
