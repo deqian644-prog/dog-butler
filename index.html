@@ -4,8 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#FF6B6B">
 <title>🐾 咖咖与夏夏专属管家</title>
+<style>
+/* Splash screen - instant render before main CSS/JS */
+#splash{position:fixed;inset:0;z-index:9999;background:#FFF8F0;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .4s}
+@media(prefers-color-scheme:dark){#splash{background:#1A1A2E;color:#EAEAEA}}
+#splash .sp-icon{font-size:64px;animation:sp-bounce 1s ease-in-out infinite}
+#splash .sp-name{font-size:20px;font-weight:700;margin-top:12px;color:#FF6B6B}
+#splash .sp-dots{margin-top:16px;display:flex;gap:6px}
+#splash .sp-dot{width:8px;height:8px;border-radius:50%;background:#FF6B6B;animation:sp-pulse 1.2s ease-in-out infinite}
+#splash .sp-dot:nth-child(2){animation-delay:.2s}
+#splash .sp-dot:nth-child(3){animation-delay:.4s}
+@keyframes sp-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes sp-pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+</style>
 <style>
 :root{--bg:#FFF8F0;--card:#fff;--pri:#FF6B6B;--pri-l:#FF8E8E;--pri-d:#E55A5A;--sec:#4ECDC4;--txt:#2D3436;--txt-l:#636E72;--txt-m:#B2BEC3;--bdr:#F0E6DE;--shd:0 2px 12px rgba(0,0,0,.08);--dng:#E74C3C;--wrn:#F39C12;--suc:#27AE60;--rad:16px;--rad-s:10px;--tab-h:64px}
 @media(prefers-color-scheme:dark){:root{--bg:#1A1A2E;--card:#222244;--txt:#EAEAEA;--txt-l:#B0B0C0;--txt-m:#666680;--bdr:#333355;--shd:0 2px 12px rgba(0,0,0,.3)}}
@@ -104,6 +118,11 @@ body{font-family:-apple-system,'PingFang SC','Hiragino Sans GB',system-ui,sans-s
 </style>
 </head>
 <body>
+<div id="splash">
+  <div class="sp-icon">🐾</div>
+  <div class="sp-name">咖咖与夏夏专属管家</div>
+  <div class="sp-dots"><div class="sp-dot"></div><div class="sp-dot"></div><div class="sp-dot"></div></div>
+</div>
 <div class="hdr"><h1>🐾 咖咖与夏夏专属管家</h1><small>两只毛孩子的贴心助手</small></div>
 
 <div class="page active" id="pg-dash">
@@ -1445,6 +1464,11 @@ function deleteWalk(id) {
 document.addEventListener('DOMContentLoaded', () => {
   fetchWeather();
   renderDashboard();
+  // Dismiss splash screen
+  const splash = document.getElementById('splash');
+  if (splash) { splash.style.opacity = '0'; setTimeout(() => splash.remove(), 400); }
+  // Register Service Worker for offline caching
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
   // Refresh weather every 30 min
   setInterval(fetchWeather, 30 * 60 * 1000);
 });
