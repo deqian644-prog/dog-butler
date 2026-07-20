@@ -1197,54 +1197,79 @@ function addPoop(status, dogName) {
   renderPoops();
 }
 
+function deletePoopRecord(idx) {
+  if (!confirm('确定要删除这条记录吗？')) return;
+  currentPoops.splice(idx, 1);
+  const saved = LS.get('timerState', {});
+  saved.poops = currentPoops;
+  LS.set('timerState', saved);
+  renderPoops();
+}
+
 function renderPoops() {
-  // Summary
-  const peeCount = currentPoops.filter(p => p.type === 'pee').length;
-  const poopCount = currentPoops.filter(p => p.type === 'poop').length;
+  // === Summary: today's total per-dog, from poopLogs + currentPoops ===
   const summaryEl = document.getElementById('pee-poop-summary');
   if (summaryEl) {
-    if (currentPoops.length > 0) {
-      const poopDetails = [];
-      const normal = currentPoops.filter(p => p.type === 'poop' && p.status === '正常').length;
-      const soft = currentPoops.filter(p => p.type === 'poop' && p.status === '偏软').length;
-      const abnormal = currentPoops.filter(p => p.type === 'poop' && p.status === '异常').length;
-      if (normal) poopDetails.push('正常' + normal);
-      if (soft) poopDetails.push('偏软' + soft);
-      if (abnormal) poopDetails.push('异常' + abnormal);
-      summaryEl.innerHTML = `<span>💧 小便 ${peeCount} 次</span><span>💩 大便 ${poopCount} 次${poopDetails.length ? '(' + poopDetails.join('/') + ')' : ''}</span>`;
+    const today = todayStr();
+    // Saved records from today
+    const todaySaved = poopLogs.filter(p => {
+      const wl = walkLogs.find(w => w.id === p.walkId);
+      return wl && wl.date === today;
+    });
+    // Combine with current session records
+    const allToday = [...todaySaved, ...currentPoops];
+    if (allToday.length > 0) {
+      const poopDogs = getPoopDogList();
+      // Collect all unique dog names from allToday
+      const allDogNames = [...new Set(allToday.map(p => p.dog).filter(Boolean))];
+      // If no dog field, use poopDogs
+      const displayDogs = allDogNames.length > 0 ? allDogNames : poopDogs;
+      let summaryHtml = '';
+      displayDogs.forEach(dogName => {
+        const dogRecs = allToday.filter(p => p.dog === dogName);
+        const pee = dogRecs.filter(p => p.type === 'pee').length;
+        const poop = dogRecs.filter(p => p.type === 'poop' || (!p.type && p.status)).length;
+        if (pee > 0 || poop > 0) {
+          const parts = [];
+          if (pee > 0) parts.push(`💧${pee}`);
+          if (poop > 0) parts.push(`💩${poop}`);
+          summaryHtml += `<span>${dogName}: ${parts.join(' ')}</span>`;
+        }
+      });
+      summaryEl.innerHTML = summaryHtml || '';
     } else {
       summaryEl.innerHTML = '';
     }
   }
+  // === Current session records list with delete buttons ===
   if (!currentPoops.length) {
     document.getElementById('poop-recs').innerHTML = '<div class="tsm tmut tc">暂无记录</div>';
     return;
   }
   const clsMap = { '正常': 'poop-n', '偏软': 'poop-s', '异常': 'poop-a' };
   const poopDogs = getPoopDogList();
+
+  function renderRecordItem(p, originalIdx) {
+    const delBtn = `<button class="del-b" onclick="deletePoopRecord(${originalIdx})" style="margin-left:6px;font-size:12px">🗑️</button>`;
+    if (p.type === 'pee') {
+      return `<div style="margin-bottom:4px;display:flex;align-items:center"><span class="tsm tmut">${p.time}</span> <span class="poop-t" style="background:#E3F2FD;color:#1976D2">💧 小便</span>${delBtn}</div>`;
+    }
+    return `<div style="margin-bottom:4px;display:flex;align-items:center"><span class="tsm tmut">${p.time}</span> <span class="poop-t ${clsMap[p.status]}">💩 ${p.status}</span>${delBtn}</div>`;
+  }
+
   if (poopDogs.length <= 1) {
-    // Simple list
-    document.getElementById('poop-recs').innerHTML = [...currentPoops].reverse().map(p => {
-      if (p.type === 'pee') {
-        return `<div style="margin-bottom:4px"><span class="tsm tmut">${p.time}</span> <span class="poop-t" style="background:#E3F2FD;color:#1976D2">💧 小便</span></div>`;
-      }
-      return `<div style="margin-bottom:4px"><span class="tsm tmut">${p.time}</span> <span class="poop-t ${clsMap[p.status]}">💩 ${p.status}</span></div>`;
-    }).join('');
+    // Build with original indices for delete
+    const indexed = currentPoops.map((p, i) => ({ p, i })).reverse();
+    document.getElementById('poop-recs').innerHTML = indexed.map(({ p, i }) => renderRecordItem(p, i)).join('');
   } else {
-    // Group by dog
     let html = '';
     poopDogs.forEach(dogName => {
-      const dogPoops = currentPoops.filter(p => p.dog === dogName);
+      const indexed = currentPoops.map((p, i) => ({ p, i })).filter(({ p }) => p.dog === dogName).reverse();
       html += `<div style="margin-bottom:8px"><div class="fl" style="font-weight:600;margin-bottom:2px">${dogName}</div>`;
-      if (dogPoops.length === 0) {
+      if (indexed.length === 0) {
         html += '<div class="tsm tmut">暂无记录</div>';
       } else {
-        html += [...dogPoops].reverse().map(p => {
-          if (p.type === 'pee') {
-            return `<div style="margin-bottom:4px"><span class="tsm tmut">${p.time}</span> <span class="poop-t" style="background:#E3F2FD;color:#1976D2">💧 小便</span></div>`;
-          }
-          return `<div style="margin-bottom:4px"><span class="tsm tmut">${p.time}</span> <span class="poop-t ${clsMap[p.status]}">💩 ${p.status}</span></div>`;
-        }).join('');
+        html += indexed.map(({ p, i }) => renderRecordItem(p, i)).join('');
       }
       html += '</div>';
     });
@@ -1473,8 +1498,8 @@ function renderWalkStats() {
 
   // Calculate date range
   const {start, end, label} = getStatRange(statPeriod, statOffset);
-  const startStr = start.toISOString().slice(0,10);
-  const endStr = end.toISOString().slice(0,10);
+  const startStr = localDateStr(start);
+  const endStr = localDateStr(end);
 
   // Nav
   document.getElementById('stat-nav').innerHTML = `
@@ -1521,6 +1546,13 @@ function renderWalkStats() {
   document.getElementById('walk-stats-content').innerHTML = html || '<div class="tsm tmut tc">暂无统计数据</div>';
 }
 
+function localDateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + dd;
+}
+
 function getStatRange(period, offset) {
   const now = new Date();
   let start, end, label;
@@ -1529,7 +1561,7 @@ function getStatRange(period, offset) {
     d.setDate(d.getDate() + offset);
     start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     end = new Date(start);
-    label = start.toISOString().slice(0,10);
+    label = localDateStr(start);
   } else if (period === 'week') {
     const d = new Date(now);
     // Monday-based week
