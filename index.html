@@ -116,6 +116,8 @@ body{font-family:-apple-system,'PingFang SC','Hiragino Sans GB',system-ui,sans-s
 .pee-poop-summary{display:flex;gap:12px;justify-content:center;margin-bottom:8px;font-size:13px;color:var(--txt-l)}
 .pee-poop-summary span{font-weight:600}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
 <div id="splash">
@@ -123,7 +125,7 @@ body{font-family:-apple-system,'PingFang SC','Hiragino Sans GB',system-ui,sans-s
   <div class="sp-name">咖咖与夏夏专属管家</div>
   <div class="sp-dots"><div class="sp-dot"></div><div class="sp-dot"></div><div class="sp-dot"></div></div>
 </div>
-<div class="hdr"><h1>🐾 咖咖与夏夏专属管家</h1><small>两只毛孩子的贴心助手</small></div>
+<div class="hdr"><h1>🐾 咖咖与夏夏专属管家</h1><small>两只毛孩子的贴心助手</small><span id="sync-dot" title="云端同步状态" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ccc;margin-left:6px;vertical-align:middle"></span></div>
 
 <div class="page active" id="pg-dash">
   <div id="weather-box"></div>
@@ -183,10 +185,31 @@ body{font-family:-apple-system,'PingFang SC','Hiragino Sans GB',system-ui,sans-s
 </div>
 
 <script>
+// ==================== FIREBASE CONFIG ====================
+const firebaseConfig = {
+  apiKey: "AIzaSyArOfxJ5V6cAGipcg1JLuXAduKUOv0jPAw"
+  authDomain: "dog-butler-app.firebaseapp.com",
+  databaseURL: "https://dog-butler-app-default-rtdb.firebaseio.com",
+  projectId: "dog-butler-app",
+  storageBucket: "dog-butler-app.firebasestorage.app",
+  messagingSenderId: "398970059150",
+  appId: "1:398970059150:web:35848ebb846c1a431e4cdf"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const DATA_KEYS = ['dogs','vaccines','weights','illnesses','walkLogs','poopLogs','favFoods','dutyMembers','dutySchedule'];
+
 // ==================== DATA LAYER ====================
 const LS = {
+  _syncing: false,
   get(k, d) { try { return JSON.parse(localStorage.getItem('dogbutler_'+k)) || d; } catch { return d; } },
-  set(k, v) { localStorage.setItem('dogbutler_'+k, JSON.stringify(v)); }
+  set(k, v) {
+    localStorage.setItem('dogbutler_'+k, JSON.stringify(v));
+    if (!this._syncing && DATA_KEYS.includes(k)) {
+      db.ref('data/' + k).set(v).catch(function(){});
+    }
+  }
 };
 
 // Default dogs
@@ -224,6 +247,67 @@ function save() {
   LS.set('favFoods', favFoods);
   LS.set('dutyMembers', dutyMembers);
 }
+
+// ==================== FIREBASE SYNC ====================
+// Update in-memory variables when Firebase pushes changes
+function _fbUpdateVar(key, val) {
+  switch(key) {
+    case 'dogs': dogs = val; break;
+    case 'vaccines': vaccines = val; break;
+    case 'weights': weights = val; break;
+    case 'illnesses': illnesses = val; break;
+    case 'walkLogs': walkLogs = val; break;
+    case 'poopLogs': poopLogs = val; break;
+    case 'favFoods': favFoods = val; break;
+    case 'dutyMembers': dutyMembers = val; break;
+    // dutySchedule is always read via LS.get, no in-memory var needed
+  }
+}
+
+// Re-render whichever page is currently active
+function _fbRefreshPage() {
+  var ap = document.querySelector('.page.active');
+  if (!ap) return;
+  var id = ap.id;
+  if (id === 'pg-dash') renderDashboard();
+  else if (id === 'pg-health') renderHealth();
+  else if (id === 'pg-food') renderFoodPage();
+  else if (id === 'pg-walk') renderWalk();
+}
+
+// Listen for realtime changes from Firebase
+DATA_KEYS.forEach(function(key) {
+  db.ref('data/' + key).on('value', function(snapshot) {
+    var val = snapshot.val();
+    if (val !== null && val !== undefined) {
+      LS._syncing = true;
+      localStorage.setItem('dogbutler_' + key, JSON.stringify(val));
+      _fbUpdateVar(key, val);
+      LS._syncing = false;
+      _fbRefreshPage();
+    }
+  });
+});
+
+// First-time migration: push local data to Firebase if cloud is empty
+db.ref('data').once('value', function(snapshot) {
+  if (!snapshot.exists()) {
+    var localData = {};
+    DATA_KEYS.forEach(function(key) {
+      var val = LS.get(key, null);
+      if (val !== null) localData[key] = val;
+    });
+    if (Object.keys(localData).length > 0) {
+      db.ref('data').set(localData).catch(function(){});
+    }
+  }
+});
+
+// Connection status indicator
+db.ref('.info/connected').on('value', function(snap) {
+  var dot = document.getElementById('sync-dot');
+  if (dot) dot.style.background = snap.val() ? '#27AE60' : '#E74C3C';
+});
 
 // ==================== FOOD DATABASE (100+ items) ====================
 const FOODS = [
