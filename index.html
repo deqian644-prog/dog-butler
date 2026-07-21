@@ -264,8 +264,12 @@ function _fbUpdateVar(key, val) {
   }
 }
 
+// App ready flag — prevents Firebase callbacks from rendering before DOM is ready
+var _appReady = false;
+
 // Re-render whichever page is currently active
 function _fbRefreshPage() {
+  if (!_appReady) return;
   var ap = document.querySelector('.page.active');
   if (!ap) return;
   var id = ap.id;
@@ -1703,19 +1707,37 @@ function renderWalkLogs() {
 
   document.getElementById('walk-logs').innerHTML = recent.map(w => {
     const wPoops = poopLogs.filter(p => p.walkId === w.id);
-    const peeCount = wPoops.filter(p => p.type === 'pee').length;
-    const poopItems = wPoops.filter(p => p.type === 'poop' || (!p.type && p.status));
-    const poopCount = poopItems.length;
     const clsMap = { '正常': 'poop-n', '偏软': 'poop-s', '异常': 'poop-a' };
     let excretionSummary = '';
-    if (peeCount > 0 || poopCount > 0) {
-      const parts = [];
-      if (peeCount > 0) parts.push(`💧小便${peeCount}次`);
-      if (poopCount > 0) {
-        const details = poopItems.map(p => p.status).join('/');
-        parts.push(`💩大便${poopCount}次(${details})`);
+    if (wPoops.length > 0) {
+      // 按狗拆分
+      const dogNames = [...new Set(wPoops.map(p => p.dog).filter(Boolean))];
+      if (dogNames.length > 0) {
+        const dogParts = dogNames.map(dogName => {
+          const dogRecs = wPoops.filter(p => p.dog === dogName);
+          const pee = dogRecs.filter(p => p.type === 'pee').length;
+          const poopItems = dogRecs.filter(p => p.type === 'poop' || (!p.type && p.status));
+          const parts = [];
+          if (pee > 0) parts.push(`💧${pee}`);
+          if (poopItems.length > 0) {
+            const details = poopItems.map(p => `<span class="poop-t ${clsMap[p.status]||''}">${p.status}</span>`).join('');
+            parts.push(`💩${poopItems.length}(${details})`);
+          }
+          return parts.length > 0 ? `<span style="font-weight:600">${dogName}</span>: ${parts.join(' ')}` : '';
+        }).filter(Boolean);
+        excretionSummary = `<div class="tsm" style="margin-top:4px">${dogParts.join(' | ')}</div>`;
+      } else {
+        // 兼容旧数据（没有 dog 字段）
+        const peeCount = wPoops.filter(p => p.type === 'pee').length;
+        const poopItems = wPoops.filter(p => p.type === 'poop' || (!p.type && p.status));
+        const parts = [];
+        if (peeCount > 0) parts.push(`💧小便${peeCount}次`);
+        if (poopItems.length > 0) {
+          const details = poopItems.map(p => p.status).join('/');
+          parts.push(`💩大便${poopItems.length}次(${details})`);
+        }
+        excretionSummary = `<div class="tsm" style="margin-top:4px">${parts.join(' ')}</div>`;
       }
-      excretionSummary = `<div class="tsm" style="margin-top:4px">${parts.join(' ')}</div>`;
     }
     return `<div class="walk-i">
       <div class="fb"><div><span style="font-weight:600">${w.dogName}</span> <span class="badge b-sec">${w.walker}</span></div>
@@ -1736,6 +1758,7 @@ function deleteWalk(id) {
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
+  _appReady = true;
   fetchWeather();
   renderDashboard();
   // Dismiss splash screen
