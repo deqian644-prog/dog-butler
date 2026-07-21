@@ -185,6 +185,9 @@ body{font-family:-apple-system,'PingFang SC','Hiragino Sans GB',system-ui,sans-s
 </div>
 
 <script>
+// Fallback: force-remove splash after 3s no matter what (even if JS errors below)
+setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove()},400)}},3000);
+
 // ==================== FIREBASE CONFIG ====================
 const firebaseConfig = {
   apiKey: "AIzaSyArOfxJ5V6cAGipcg1JLuXAduKUOv0jPAw",
@@ -1764,8 +1767,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // Dismiss splash screen
   const splash = document.getElementById('splash');
   if (splash) { splash.style.opacity = '0'; setTimeout(() => splash.remove(), 400); }
-  // Register Service Worker for offline caching
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  // Register Service Worker — force update & clear stale caches
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // Force the new SW to activate immediately
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (nw) nw.addEventListener('statechange', () => {
+          if (nw.state === 'activated') {
+            // New SW active — reload once to use cache-first strategy
+            if (!sessionStorage.getItem('sw-refreshed')) {
+              sessionStorage.setItem('sw-refreshed', '1');
+              location.reload();
+            }
+          }
+        });
+      });
+      // Check for updates on each visit
+      reg.update().catch(() => {});
+    }).catch(() => {});
+  }
   // Refresh weather every 30 min
   setInterval(fetchWeather, 30 * 60 * 1000);
 });
