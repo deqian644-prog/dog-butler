@@ -116,8 +116,6 @@ body{font-family:-apple-system,'PingFang SC','Hiragino Sans GB',system-ui,sans-s
 .pee-poop-summary{display:flex;gap:12px;justify-content:center;margin-bottom:8px;font-size:13px;color:var(--txt-l)}
 .pee-poop-summary span{font-weight:600}
 </style>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
 <div id="splash">
@@ -188,6 +186,77 @@ body{font-family:-apple-system,'PingFang SC','Hiragino Sans GB',system-ui,sans-s
 // Fallback: force-remove splash after 3s no matter what (even if JS errors below)
 setTimeout(function(){var s=document.getElementById('splash');if(s){s.style.opacity='0';setTimeout(function(){s.remove()},400)}},3000);
 
+// ==================== FIREBASE ASYNC LOADER ====================
+var _firebaseReady = false;
+var _offlineMode = false;
+
+function loadScript(src, timeout) {
+  return new Promise(function(resolve, reject) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+    if (timeout) setTimeout(function() { reject(new Error('timeout')); }, timeout);
+  });
+}
+
+function initFirebase() {
+  return loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js', 5000)
+    .then(function() { return loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js', 5000); })
+    .then(function() { return loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js', 5000); })
+    .then(function() {
+      firebase.initializeApp(firebaseConfig);
+      return firebase.auth().signInAnonymously();
+    })
+    .then(function() {
+      _firebaseReady = true;
+      window.db = firebase.database();
+      setupFirebaseSync();
+      // Connection status
+      db.ref('.info/connected').on('value', function(snap) {
+        var dot = document.getElementById('sync-dot');
+        if (dot) dot.style.background = snap.val() ? '#27AE60' : '#E74C3C';
+      });
+    })
+    .catch(function(err) {
+      console.warn('Firebase unavailable, offline mode:', err);
+      _offlineMode = true;
+      var dot = document.getElementById('sync-dot');
+      if (dot) { dot.style.background = '#ccc'; dot.title = '离线模式'; }
+    });
+}
+
+function setupFirebaseSync() {
+  // Listen for realtime changes
+  DATA_KEYS.forEach(function(key) {
+    db.ref('data/' + key).on('value', function(snapshot) {
+      var val = snapshot.val();
+      if (val !== null && val !== undefined) {
+        LS._syncing = true;
+        localStorage.setItem('dogbutler_' + key, JSON.stringify(val));
+        _fbUpdateVar(key, val);
+        LS._syncing = false;
+        _fbRefreshPage();
+      }
+    });
+  });
+
+  // First-time migration: push local data to Firebase if cloud is empty
+  db.ref('data').once('value', function(snapshot) {
+    if (!snapshot.exists()) {
+      var localData = {};
+      DATA_KEYS.forEach(function(key) {
+        var val = LS.get(key, null);
+        if (val !== null) localData[key] = val;
+      });
+      if (Object.keys(localData).length > 0) {
+        db.ref('data').set(localData).catch(function(){});
+      }
+    }
+  });
+}
+
 // ==================== FIREBASE CONFIG ====================
 const firebaseConfig = {
   apiKey: "AIzaSyArOfxJ5V6cAGipcg1JLuXAduKUOv0jPAw",
@@ -199,8 +268,6 @@ const firebaseConfig = {
   appId: "1:398970059150:web:35848ebb846c1a431e4cdf"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
 const DATA_KEYS = ['dogs','vaccines','weights','illnesses','walkLogs','poopLogs','favFoods','dutyMembers','dutySchedule'];
 
 // ==================== DATA LAYER ====================
@@ -209,7 +276,7 @@ const LS = {
   get(k, d) { try { return JSON.parse(localStorage.getItem('dogbutler_'+k)) || d; } catch { return d; } },
   set(k, v) {
     localStorage.setItem('dogbutler_'+k, JSON.stringify(v));
-    if (!this._syncing && DATA_KEYS.includes(k)) {
+    if (!this._syncing && _firebaseReady && window.db && DATA_KEYS.includes(k)) {
       db.ref('data/' + k).set(v).catch(function(){});
     }
   }
@@ -281,40 +348,6 @@ function _fbRefreshPage() {
   else if (id === 'pg-food') renderFoodPage();
   else if (id === 'pg-walk') renderWalk();
 }
-
-// Listen for realtime changes from Firebase
-DATA_KEYS.forEach(function(key) {
-  db.ref('data/' + key).on('value', function(snapshot) {
-    var val = snapshot.val();
-    if (val !== null && val !== undefined) {
-      LS._syncing = true;
-      localStorage.setItem('dogbutler_' + key, JSON.stringify(val));
-      _fbUpdateVar(key, val);
-      LS._syncing = false;
-      _fbRefreshPage();
-    }
-  });
-});
-
-// First-time migration: push local data to Firebase if cloud is empty
-db.ref('data').once('value', function(snapshot) {
-  if (!snapshot.exists()) {
-    var localData = {};
-    DATA_KEYS.forEach(function(key) {
-      var val = LS.get(key, null);
-      if (val !== null) localData[key] = val;
-    });
-    if (Object.keys(localData).length > 0) {
-      db.ref('data').set(localData).catch(function(){});
-    }
-  }
-});
-
-// Connection status indicator
-db.ref('.info/connected').on('value', function(snap) {
-  var dot = document.getElementById('sync-dot');
-  if (dot) dot.style.background = snap.val() ? '#27AE60' : '#E74C3C';
-});
 
 // ==================== FOOD DATABASE (100+ items) ====================
 const FOODS = [
@@ -1764,9 +1797,12 @@ document.addEventListener('DOMContentLoaded', () => {
   _appReady = true;
   fetchWeather();
   renderDashboard();
-  // Dismiss splash screen
+  renderFoodPage();
+  // Dismiss splash screen immediately after first render
   const splash = document.getElementById('splash');
   if (splash) { splash.style.opacity = '0'; setTimeout(() => splash.remove(), 400); }
+  // Init Firebase asynchronously (won't block page)
+  initFirebase();
   // Register Service Worker — force update & clear stale caches
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(reg => {
