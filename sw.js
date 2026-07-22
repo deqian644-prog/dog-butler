@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dog-butler-v7';
+const CACHE_NAME = 'dog-butler-v8';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -23,7 +23,8 @@ self.addEventListener('fetch', e => {
   if (url.hostname.includes('gstatic.com') ||
       url.hostname.includes('firebaseio.com') ||
       url.hostname.includes('googleapis.com') ||
-      url.hostname.includes('firebase')) {
+      url.hostname.includes('firebase') ||
+      url.hostname.includes('jsdelivr.net')) {
     return; // let the browser handle natively
   }
 
