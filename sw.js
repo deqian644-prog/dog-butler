@@ -1,5 +1,5 @@
-const CACHE_NAME = 'dog-butler-v8';
-const ASSETS = ['/', '/index.html', '/manifest.json'];
+const CACHE_NAME = 'dog-butler-v9';
+const ASSETS = ['/', '/index.html', '/manifest.json', '/firebase-app-compat.js', '/firebase-database-compat.js', '/firebase-auth-compat.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
@@ -23,8 +23,7 @@ self.addEventListener('fetch', e => {
   if (url.hostname.includes('gstatic.com') ||
       url.hostname.includes('firebaseio.com') ||
       url.hostname.includes('googleapis.com') ||
-      url.hostname.includes('firebase') ||
-      url.hostname.includes('jsdelivr.net')) {
+      url.hostname.includes('firebase')) {
     return; // let the browser handle natively
   }
 
