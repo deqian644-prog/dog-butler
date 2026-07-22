@@ -217,6 +217,7 @@ function initFirebase() {
       db.ref('.info/connected').on('value', function(snap) {
         var dot = document.getElementById('sync-dot');
         if (dot) dot.style.background = snap.val() ? '#27AE60' : '#E74C3C';
+        if (snap.val()) flushPendingSync();
       });
     })
     .catch(function(err) {
@@ -227,11 +228,34 @@ function initFirebase() {
     });
 }
 
+function flushPendingSync() {
+  if (!_firebaseReady || !window.db) return;
+  var pending = PendingSync.get();
+  var keys = Object.keys(pending);
+  if (keys.length === 0) return;
+  console.log('[Sync] Flushing', keys.length, 'pending writes');
+  keys.forEach(function(k) {
+    db.ref('data/' + k).set(pending[k]).then(function() {
+      PendingSync.remove(k);
+    }).catch(function(err) {
+      console.warn('[Sync] Failed to flush', k, err);
+    });
+  });
+}
+
 function setupFirebaseSync() {
+  // Flush any offline writes first — local changes take priority
+  flushPendingSync();
+
   // Listen for realtime changes
   DATA_KEYS.forEach(function(key) {
     db.ref('data/' + key).on('value', function(snapshot) {
       var val = snapshot.val();
+      // Skip server update if we have pending local changes for this key
+      if (PendingSync.has(key)) {
+        console.log('[Sync] Skipping server update for', key, '- pending local write exists');
+        return;
+      }
       if (val !== null && val !== undefined) {
         LS._syncing = true;
         localStorage.setItem('dogbutler_' + key, JSON.stringify(val));
@@ -276,10 +300,26 @@ const LS = {
   get(k, d) { try { return JSON.parse(localStorage.getItem('dogbutler_'+k)) || d; } catch { return d; } },
   set(k, v) {
     localStorage.setItem('dogbutler_'+k, JSON.stringify(v));
-    if (!this._syncing && _firebaseReady && window.db && DATA_KEYS.includes(k)) {
-      db.ref('data/' + k).set(v).catch(function(){});
+    if (!this._syncing && DATA_KEYS.includes(k)) {
+      if (_firebaseReady && window.db) {
+        db.ref('data/' + k).set(v).catch(function(){});
+        PendingSync.remove(k);
+      } else {
+        PendingSync.add(k, v);
+      }
     }
   }
+};
+
+// Pending sync queue — stores writes that failed to reach Firebase
+var PendingSync = {
+  _key: 'dogbutler_pendingSync',
+  get: function() { try { return JSON.parse(localStorage.getItem(this._key)) || {}; } catch(e) { return {}; } },
+  add: function(k, v) { var q = this.get(); q[k] = v; localStorage.setItem(this._key, JSON.stringify(q)); },
+  remove: function(k) { var q = this.get(); delete q[k]; localStorage.setItem(this._key, JSON.stringify(q)); },
+  clear: function() { localStorage.removeItem(this._key); },
+  has: function(k) { return this.get().hasOwnProperty(k); },
+  keys: function() { return Object.keys(this.get()); }
 };
 
 // Default dogs

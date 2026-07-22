@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dog-butler-v4';
+const CACHE_NAME = 'dog-butler-v5';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
