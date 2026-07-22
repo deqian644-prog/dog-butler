@@ -123,7 +123,7 @@ body{font-family:-apple-system,'PingFang SC','Hiragino Sans GB',system-ui,sans-s
   <div class="sp-name">咖咖与夏夏专属管家</div>
   <div class="sp-dots"><div class="sp-dot"></div><div class="sp-dot"></div><div class="sp-dot"></div></div>
 </div>
-<div class="hdr"><h1>🐾 咖咖与夏夏专属管家</h1><small>两只毛孩子的贴心助手</small><span id="sync-dot" title="云端同步状态" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ccc;margin-left:6px;vertical-align:middle"></span></div>
+<div class="hdr"><h1>🐾 咖咖与夏夏专属管家</h1><small>两只毛孩子的贴心助手</small><span id="sync-dot" title="云端同步状态（点击重试）" onclick="retryFirebase()" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ccc;margin-left:6px;vertical-align:middle;cursor:pointer"></span></div>
 
 <div class="page active" id="pg-dash">
   <div id="weather-box"></div>
@@ -194,23 +194,25 @@ function loadScript(src, timeout) {
   return new Promise(function(resolve, reject) {
     var s = document.createElement('script');
     s.src = src;
-    s.onload = resolve;
-    s.onerror = reject;
+    var tid = null;
+    s.onload = function() { if (tid) clearTimeout(tid); resolve(); };
+    s.onerror = function() { if (tid) clearTimeout(tid); reject(new Error('load error: ' + src)); };
     document.head.appendChild(s);
-    if (timeout) setTimeout(function() { reject(new Error('timeout')); }, timeout);
+    if (timeout) tid = setTimeout(function() { reject(new Error('timeout: ' + src)); }, timeout);
   });
 }
 
-function initFirebase() {
-  return loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js', 5000)
-    .then(function() { return loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js', 5000); })
-    .then(function() { return loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js', 5000); })
+function _doInitFirebase() {
+  return loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js', 15000)
+    .then(function() { return loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js', 15000); })
+    .then(function() { return loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js', 15000); })
     .then(function() {
-      firebase.initializeApp(firebaseConfig);
+      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
       return firebase.auth().signInAnonymously();
     })
     .then(function() {
       _firebaseReady = true;
+      _offlineMode = false;
       window.db = firebase.database();
       setupFirebaseSync();
       // Connection status
@@ -219,13 +221,33 @@ function initFirebase() {
         if (dot) dot.style.background = snap.val() ? '#27AE60' : '#E74C3C';
         if (snap.val()) flushPendingSync();
       });
-    })
-    .catch(function(err) {
-      console.warn('Firebase unavailable, offline mode:', err);
-      _offlineMode = true;
-      var dot = document.getElementById('sync-dot');
-      if (dot) { dot.style.background = '#ccc'; dot.title = '离线模式'; }
     });
+}
+
+var _fbRetryCount = 0;
+function retryFirebase() {
+  if (_firebaseReady) return; // already connected
+  var dot = document.getElementById('sync-dot');
+  if (dot) { dot.style.background = '#F39C12'; dot.title = '正在重连...'; }
+  _fbRetryCount = 0;
+  _offlineMode = false;
+  initFirebase();
+}
+function initFirebase() {
+  return _doInitFirebase().catch(function(err) {
+    _fbRetryCount++;
+    console.warn('Firebase init attempt', _fbRetryCount, 'failed:', err);
+    if (_fbRetryCount < 3) {
+      // Retry after increasing delay
+      return new Promise(function(resolve) {
+        setTimeout(resolve, _fbRetryCount * 3000);
+      }).then(function() { return _doInitFirebase(); });
+    }
+    console.warn('Firebase unavailable after retries, offline mode');
+    _offlineMode = true;
+    var dot = document.getElementById('sync-dot');
+    if (dot) { dot.style.background = '#ccc'; dot.title = '离线模式 - 下拉刷新重试'; }
+  });
 }
 
 function flushPendingSync() {
