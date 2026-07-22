@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dog-butler-v5';
+const CACHE_NAME = 'dog-butler-v6';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -27,7 +27,20 @@ self.addEventListener('fetch', e => {
     return; // let the browser handle natively
   }
 
-  // Local assets: cache-first with background update (stale-while-revalidate)
+  // index.html: network-first (always get latest code)
+  const reqUrl = new URL(e.request.url);
+  if (reqUrl.pathname === '/' || reqUrl.pathname.endsWith('/index.html')) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Other local assets: cache-first with background update
   e.respondWith(
     caches.match(e.request).then(cached => {
       const fetchPromise = fetch(e.request).then(res => {
